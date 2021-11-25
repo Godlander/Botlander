@@ -1,4 +1,5 @@
 exports.run = async (client, message, args) => {
+    //hihixd
     message.react('👀')
       .then((msg) => {
           setTimeout(function(){

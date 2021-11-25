@@ -26,7 +26,7 @@ exports.run = async (client, message, args) => {
 };
 
 exports.data = {
-    help: 9000,
+    help: 9999,
     name: "do",
     text: "[>do <playing|watching|listening|streaming|competing> (status)][sets Botlander's current activity status]"
 };

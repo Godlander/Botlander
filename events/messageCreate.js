@@ -17,26 +17,27 @@ module.exports = async (client, message) => {
         try {await command.run(client, message, args);}
         catch (e) {console.error(e);}
     }
-
-    //look for botlander action call
-    const regx = new RegExp(`(botlander)|(<@!?${client.user.id}>)`);
-    if (regx.test(message.content)) {
-        input = message.content.replace(regx, " ");
-        input = input.replace(/'|"/gi, "\$&");
-        input = input.replace(/ +/gi, " ");
-        input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        console.log("\nInput: " + input);
-        if (message.guild && !message.member) await message.guild.members.fetch(message.author); //grab member if not already cached
-        //start typing
-        message.channel.sendTyping();
-        //try actions in order defined in config
-        for (const name of config.actions) {
-            const action = container.actions.get(name);
-            try {
-                const success = await action.run(client, message, input);
-                if (success) {return;}
-            }
-            catch (e) {console.error(e);}
-        };
+    else {
+        //look for botlander action call
+        const regx = new RegExp(`>?(botlander|<@!?${client.user.id}>)`);
+        if (regx.test(message.content)) {
+            message.channel.sendTyping();
+            input = message.content.replace(regx, " ");
+            input = input.replace(/'|"/gi, "\$&");
+            input = input.replace(/ +/gi, " ");
+            input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
+            console.log("\nInput: " + input);
+            if (message.guild && !message.member) await message.guild.members.fetch(message.author); //grab member if not already cached
+            //start typing
+            //try actions in order defined in config
+            for (const name of config.actions) {
+                const action = container.actions.get(name);
+                try {
+                    const success = await action.run(client, message, input);
+                    if (success) {return;}
+                }
+                catch (e) {console.error(e);}
+            };
+        }
     }
 };
