@@ -1,4 +1,7 @@
+const from = require('../permissions.js');
+
 exports.run = async (client, message, args) => {
+    if (!from.owner(message)) {message.react('💩'); return;}
     const { container } = client;
     //grab list of commands of help value 9999
     const commands = container.commands.filter(cmd => cmd.data.help == 9999);
@@ -9,6 +12,6 @@ exports.run = async (client, message, args) => {
 
 exports.data = {
     help: 9999,
-    name: "hepl",
-    text: "[>hepl][displays this message]"
+    name: "ehlp",
+    text: "[>ehlp][displays this message]"
 };
