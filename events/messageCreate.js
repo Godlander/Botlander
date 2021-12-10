@@ -21,7 +21,6 @@ module.exports = async (client, message) => {
         //look for botlander action call
         const regx = new RegExp(`>?(botlander|<@!?${client.user.id}>)`);
         if (regx.test(message.content)) {
-            message.channel.sendTyping();
             input = message.content.replace(regx, " ");
             input = input.replace(/'|"/gi, "\$&");
             input = input.replace(/ +/gi, " ");
@@ -29,14 +28,12 @@ module.exports = async (client, message) => {
             console.log("\nInput: " + input);
             if (message.guild && !message.member) await message.guild.members.fetch(message.author); //grab member if not already cached
             //start typing
+            message.channel.sendTyping();
             //try actions in order defined in config
             for (const name of config.actions) {
-                const action = container.actions.get(name);
-                try {
-                    const success = await action.run(client, message, input);
-                    if (success) {return;}
-                }
-                catch (e) {console.error(e);}
+                const success = await container.actions.get(name).run(client, message, input);
+                console.log([name,success]);
+                if (success) {return true;}
             };
         }
     }

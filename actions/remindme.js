@@ -18,9 +18,12 @@ exports.run = async (client, message, input) => {
                 message.channel.send("Ok, " + message.member.displayName + ", I'll remind you <t:" + Math.floor(time.getTime() / 1000) + ":R>");
                 fs.writeFile("./reminders.json", JSON.stringify(reminders), (err) => {if (err) console.error(err)});
                 exports.remind(client, rem);
-            } else {console.log("time is in the past."); return false;}
-        } else {console.log("no time found in message."); return false;}
-    } else {console.log("not a remindme action."); return false;}
+            }
+            else {console.log("time is in the past."); return false;}
+        }
+        else {console.log("no time found in message."); return false;}
+    }
+    else {console.log("not a remindme action."); return false;}
     return true;
 };
 

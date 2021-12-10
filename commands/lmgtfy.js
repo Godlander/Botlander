@@ -1,12 +1,12 @@
 exports.run = async (client, message, args) => {
     var link = "<https://www.google.com/"
-    if (args.length > 2) {
+    if (args.length > 1) {
         link += "?q=" + args.slice(1).join("%20");
+        message.channel.send(link + ">");
     }
     else {
         message.react('❓');
     }
-    message.channel.send(link + ">");
 };
 
 exports.data = {
