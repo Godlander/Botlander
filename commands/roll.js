@@ -19,5 +19,5 @@ exports.run = async (client, message, args) => {
 exports.data = {
     help: 0,
     name: "roll",
-    text: "[>roll <max> (min)][generates a random number between max and min]"
+    text: "[>roll <max> (min)][generates a random number between max and min (inclusive)]"
 };

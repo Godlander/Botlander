@@ -5,7 +5,7 @@ exports.run = async (client, message, input) => {
     var generic = arr[Math.floor(Math.random()*arr.length)];
 
     fetch('https://api.affiliateplus.xyz/api/chatbot?message=' + input + '&botname=Botlander&ownername=Godlander')
-        .catch(err => {console.log(err); message.channel.send(generic)})
+        .catch(err => {console.log(err); message.channel.send(generic); return false;})
         .then(response => response.json())
         .then(out => {
             if (out == undefined) {throw new Error;}

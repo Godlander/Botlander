@@ -27,6 +27,7 @@ exports.run = async (client, message, input) => {
             meanings.push("*" + speech + "*\n> " + definitions.splice(0,5).join('\n> '));
         })
         message.channel.send("> **" + word + "**\n> " + meanings.splice(0,5).join('\n> '));
-        return true;
-    } else {console.log("not a dictionary action."); return false;} //message did not match regex
+    }
+    else return false;
+    return true;
 };

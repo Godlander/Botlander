@@ -44,10 +44,10 @@ exports.run = async (client, message, args) => {
             };
             txt = txt.re();
 
-            //add a random uwu postfix
+            //add a random owo postfix
             var arr = ["uwu","owo",">w<","nyaa~","UwU","OwO","~~","uwu~","owo~","UwU~","OwO~","*nuzzles~","rawr x3","o3o","*rubb~","mmmm~","daddy~",";)","˶◕‿◕˶",">////<"];
             txt = txt+"  "+arr[Math.floor(Math.random()*arr.length)];
-            
+
             if (msg.attachments.size > 0) {att = msg.attachments.first().url}
             var embed = new MessageEmbed()
                 .setColor(msg.member.displayHexColor)

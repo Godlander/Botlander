@@ -28,7 +28,7 @@ module.exports = async (client, message) => {
             console.log("\nInput: " + input);
             if (message.guild && !message.member) await message.guild.members.fetch(message.author); //grab member if not already cached
             //start typing
-            message.channel.sendTyping();
+            await message.channel.sendTyping();
             //try actions in order defined in config
             for (const name of config.actions) {
                 const success = await container.actions.get(name).run(client, message, input);

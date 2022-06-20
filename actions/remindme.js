@@ -23,7 +23,7 @@ exports.run = async (client, message, input) => {
         }
         else {console.log("no time found in message."); return false;}
     }
-    else {console.log("not a remindme action."); return false;}
+    else return false;
     return true;
 };
 
