@@ -15,11 +15,14 @@ module.exports = async (client, message) => {
         if (message.guild && !message.member) await message.guild.members.fetch(message.author); //grab member if not already cached
         //run the command
         try {await command.run(client, message, args);}
-        catch (e) {console.error(e);}
+        catch (e) {
+            message.react('⚠');
+            console.error(e);
+        }
     }
     else {
         //look for botlander action call
-        const regx = new RegExp(`>?(botlander|<@!?${client.user.id}>)`);
+        const regx = new RegExp(`>?(botlander|<@!?${client.user.id}>)`, 'i');
         if (regx.test(message.content)) {
             input = message.content.replace(regx, " ");
             input = input.replace(/'|"/gi, "\$&");
@@ -31,8 +34,8 @@ module.exports = async (client, message) => {
             await message.channel.sendTyping();
             //try actions in order defined in config
             for (const name of config.actions) {
-                const success = await container.actions.get(name).run(client, message, input);
-                console.log([name,success]);
+                const success = await container.actions.get(name).run(client, message, input).catch(e => {console.error(e);});
+                //console.log([name,success]);
                 if (success) {return true;}
             };
         }
