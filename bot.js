@@ -42,7 +42,7 @@ const rest = new REST().setToken(token);
 (async () => {
     try {
         const data = await rest.put(
-            Routes.applicationGuildCommands(clientId, guildId),
+            Routes.applicationCommands(clientId),
             { body: commands },
         );
         console.log(`Reloaded ${data.length} commands`);
