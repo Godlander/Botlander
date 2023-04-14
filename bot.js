@@ -1,64 +1,54 @@
-const { Client, Collection } = require("discord.js");
-const fs = require("fs");
-const config = require("./config.json");
-const intents = config.intents;
-const client = new Client({intents});
-const commands = new Collection();
-const actions = new Collection();
-client.container = {
-    commands,
-    actions
-};
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { clientId, guildId, token } = require('./config.json');
 
-const init = async () => {
-    //load commands
-    const commands = fs.readdirSync("./commands/").filter(file => file.endsWith(".js"));
-    for (const file of commands) {
-        try {
-            const command = require(`./commands/${file}`);
-            console.log("command: " + command.data.name);
-            client.container.commands.set(command.data.name, command);
-        } catch(e) {console.error(e);}
-    }
-    console.log("");
-    var rewrite = false;
-    //load botlander actions
-    const actions = fs.readdirSync("./actions/").filter(file => file.endsWith(".js"));
-    for (const file of actions) {
-        const name = file.split(".")[0];
-        try {
-            const action = require(`./actions/${file}`);
-            console.log("action: " + name);
-            client.container.actions.set(name, action);
-            if (!config.actions.includes(name)) {
-                console.log("add new action: " + name);
-                config.actions.push(name);
-                rewrite = true;
-            }
-        } catch(e) {console.error(e);}
-    }
-    //clean deleted actions
-    for (const i in config.actions) {
-        const act = client.container.actions.get(config.actions[i]);
-        if (!act) {
-            rewrite = true;
-            config.actions.splice(i);
-            console.log("removed action: " + config.actions[i]);
-        }
-    }
-    if (rewrite) fs.writeFile("./config.json", JSON.stringify(config, null, 4), (err) => {if (err) console.error(err)});
-    console.log("");
-    //load events
-    const eventFiles = fs.readdirSync("./events/").filter(file => file.endsWith(".js"));
-    for (const file of eventFiles) {
-        try {
-            const name = file.split(".")[0];
-            console.log("event: " + name);
-            const event = require(`./events/${file}`);
-            client.on(name, event.bind(null, client));
-        } catch(e) {console.error(e);}
-    }
+const client = new Client({ intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
+] });
 
-    client.login(config.token);
-};
-init();
+const commands = [];
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+        commands.push(command.data.toJSON());
+    } else {
+        console.log(`[WARNING] command ${file} is missing a required "data" or "execute" property.`);
+    }
+}
+
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const event = require(filePath);
+    if (event.once) {
+        console.log(event.name);
+        client.once(event.name,(...args) => event.execute(...args));
+    } else {
+        client.on(event.name,(...args) => event.execute(...args));
+    }
+}
+
+const rest = new REST().setToken(token);
+(async () => {
+    try {
+        const data = await rest.put(
+            Routes.applicationGuildCommands(clientId, guildId),
+            { body: commands },
+        );
+        console.log(`Reloaded ${data.length} commands`);
+    } catch (error) {
+        console.error(error);
+    }
+})();
+
+client.login(token);

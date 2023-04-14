@@ -1,7 +1,7 @@
 'use strict';
 
+const { DiscordSnowflake } = require('@sapphire/snowflake');
 const Base = require('./Base');
-const SnowflakeUtil = require('../util/SnowflakeUtil');
 
 /**
  * Represents raw emoji data from the API
@@ -35,12 +35,6 @@ class Emoji extends Base {
      * @type {?Snowflake}
      */
     this.id = emoji.id;
-
-    /**
-     * Whether this emoji has been deleted
-     * @type {boolean}
-     */
-    this.deleted = false;
   }
 
   /**
@@ -59,7 +53,7 @@ class Emoji extends Base {
    * @readonly
    */
   get url() {
-    return this.id && this.client.rest.cdn.Emoji(this.id, this.animated ? 'gif' : 'png');
+    return this.id && this.client.rest.cdn.emoji(this.id, this.animated ? 'gif' : 'png');
   }
 
   /**
@@ -68,7 +62,7 @@ class Emoji extends Base {
    * @readonly
    */
   get createdTimestamp() {
-    return this.id && SnowflakeUtil.deconstruct(this.id).timestamp;
+    return this.id && DiscordSnowflake.timestampFrom(this.id);
   }
 
   /**
@@ -106,7 +100,7 @@ class Emoji extends Base {
   }
 }
 
-module.exports = Emoji;
+exports.Emoji = Emoji;
 
 /**
  * @external APIEmoji

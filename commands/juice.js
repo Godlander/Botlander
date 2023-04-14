@@ -1,11 +1,10 @@
-exports.run = async (client, message, args) => {
-    //juice
-    message.react('🧃');
-    message.channel.send('https://giant.gfycat.com/ShoddyGenerousLangur.mp4');
-};
+const { SlashCommandBuilder } = require('discord.js');
 
-exports.data = {
-    help: -1,
-    name: "juice",
-    text: "[>juice][🧃]"
+module.exports = {
+	data: new SlashCommandBuilder()
+		.setName('juice')
+		.setDescription('🧃'),
+	async execute(interaction) {
+		await interaction.reply('https://giant.gfycat.com/ShoddyGenerousLangur.mp4');
+	}
 };

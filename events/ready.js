@@ -1,7 +1,9 @@
-const config = require("../config.json");
-const remind = require("../actions/remindme");
+const { Events } = require('discord.js');
 
-module.exports = async (client) => {
-    console.log("\nhihixd");
-    remind.reset(client);
+module.exports = {
+	name: Events.ClientReady,
+	once: true,
+	execute(client) {
+		console.log(`ready`);
+	},
 };
