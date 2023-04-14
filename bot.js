@@ -1,15 +1,24 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js');
-const { clientId, guildId, token } = require('./config.json');
+const {Client, Collection, GatewayIntentBits, Partials, REST, Routes} = require('discord.js');
+const {clientId, token} = require('./config.json');
 
-const client = new Client({ intents: [
+const client = new Client({
+intents:[
     GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
-] });
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.MessageContent
+],
+partials: [
+    Partials.Message,
+    Partials.Channel,
+    Partials.Reaction
+]
+});
 
+//collect commands
 const commands = [];
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -20,11 +29,12 @@ for (const file of commandFiles) {
     if ('data' in command && 'execute' in command) {
         client.commands.set(command.data.name, command);
         commands.push(command.data.toJSON());
+        console.log(`/${file} loaded`)
     } else {
-        console.log(`[WARNING] command ${file} is missing a required "data" or "execute" property.`);
+        console.log(`/${file} couldn't load`);
     }
 }
-
+//collect events
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
@@ -41,14 +51,9 @@ for (const file of eventFiles) {
 const rest = new REST().setToken(token);
 (async () => {
     try {
-        const data = await rest.put(
-            Routes.applicationCommands(clientId),
-            { body: commands },
-        );
+        const data = await rest.put(Routes.applicationCommands(clientId), {body: commands});
         console.log(`Reloaded ${data.length} commands`);
-    } catch (error) {
-        console.error(error);
-    }
+    } catch {e => {console.log(e)}}
 })();
 
 client.login(token);

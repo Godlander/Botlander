@@ -1,6 +1,6 @@
-const { Events } = require('discord.js');
-const { clientId, openaiKey } = require('../config.json');
-const { Configuration, OpenAIApi } = require('openai');
+const {Events} = require('discord.js');
+const {clientId, openaiKey} = require('../config.json');
+const {Configuration, OpenAIApi} = require('openai');
 
 var context = [{'role':'system', 'content':'You are Botlander, a sarcastic assistant who is helpful but likes to tease.'}];
 
@@ -18,11 +18,9 @@ module.exports = {
             input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
 
             channel.sendTyping();
-
             context.push({role: "user", content: input});
             if (context.length > 10) context.splice(2,1);
             console.log("\nInput: " + JSON.stringify(context));
-
             fetch('https://api.openai.com/v1/chat/completions', {
                 method: "POST",
                 headers: {
