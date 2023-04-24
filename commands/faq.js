@@ -103,14 +103,14 @@ module.exports = {
                 content = content.replaceAll('\\n', '\n');
             }
             if (faq in data) send(interaction, `Edited faq \`${faq}\` with:`, content);
-            else send(interaction, `Added faq \`${faq}\` with: ${content.text}`, content);
+            else send(interaction, `Added faq \`${faq}\` with:`, content);
             data[faq] = content;
         }
         else if (interaction.options.getSubcommand() === 'remove') {
             if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
             if (faq in data) {
                 delete data[faq];
-                interaction.reply({content: `Removed faq ${faq}`});
+                interaction.reply({content: `Removed faq \`${faq}\``});
             }
             else return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
         }
