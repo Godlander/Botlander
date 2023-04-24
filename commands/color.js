@@ -87,13 +87,13 @@ module.exports = {
         int ??= parseInt(hex, 16);
         bin ??= parseInt(hex, 16).toString(2).padStart(24, '0');
         bin = bin.match(/.{4}/g).join(' ');
-        let embed = new EmbedBuilder()
-        .setColor(hex)
-        .setDescription('`#'+hex+'`\n'+
+        interaction.reply({embeds:[{
+            color: int,
+            description:'`#'+hex+'`\n'+
                         '`rgb('+rgb.r+', '+rgb.g+', '+rgb.b+')`\n'+
                         '`vec3('+vec3.r+', '+vec3.g+', '+vec3.b+')`\n'+
                         '`int '+int+'`\n'+
-                        '`bin '+bin+'`');
-        interaction.reply({embeds:[embed]});
+                        '`bin '+bin+'`'
+        }]});
     }
 }
