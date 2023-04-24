@@ -14,7 +14,10 @@ module.exports = {
                 .setName('faq')
                 .setDescription('faq')
                 .setAutocomplete(true)
-                .setRequired(true)))
+                .setRequired(true))
+            .addUserOption(option => option
+                .setName('mention')
+                .setDescription('Mentions a user in the response')))
         .addSubcommand(subcommand => subcommand
             .setName('add')
             .setDescription('Add or edit a faq')
@@ -25,8 +28,7 @@ module.exports = {
             .addStringOption(option => option
                 .setName('content')
                 .setDescription('content')
-                .setRequired(true))
-            .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages))
+                .setRequired(true)))
         .addSubcommand(subcommand => subcommand
             .setName('remove')
             .setDescription('Remove an faq')
@@ -34,8 +36,7 @@ module.exports = {
                 .setName('faq')
                 .setDescription('faq')
                 .setAutocomplete(true)
-                .setRequired(true))
-            .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages))
+                .setRequired(true)))
         .setDMPermission(false),
     async autocomplete(interaction) {
         let id = interaction.guildId;
@@ -73,6 +74,12 @@ module.exports = {
         } catch {global = {}}
 
         let faq = interaction.options.getString('faq', true);
+        if (interaction.options.getSubcommand() === 'query') {
+            let user = interaction.options.getUser('mention', false) ?? '';
+            if (user) user = '<@'+user+'>:\n';
+            if (faq in data) return interaction.reply(user + data[faq]);
+            else if (faq in global) return interaction.reply(user + global[faq]);
+        }
         if (interaction.options.getSubcommand() === 'add') {
             if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
             let content = interaction.options.getString('content', true);
@@ -87,10 +94,6 @@ module.exports = {
                 interaction.reply({content: `Removed faq ${faq}`});
             }
             else return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
-        }
-        else if (interaction.options.getSubcommand() === 'query') {
-            if (faq in data) return interaction.reply(data[faq]);
-            else if (faq in global) return interaction.reply(global[faq]);
         }
         else {
             return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
