@@ -1,5 +1,5 @@
 const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
-const {owner} = require('../config.json')
+const perms = require('../permissions');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,8 +11,7 @@ module.exports = {
                 .setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     async execute(interaction) {
-        if (interaction.user.id != owner) {return interaction.reply({content: `You do not have permission to use this command.`, ephemeral: true});}
-
+        if (!perms.owner(interaction)) return;
         const commandName = interaction.options.getString('command', true).toLowerCase();
         const command = interaction.client.commands.get(commandName);
         if (!command) {return interaction.reply({content: `\`/${commandName}\` is not a command`, ephemeral: true});}

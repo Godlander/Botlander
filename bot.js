@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {Client, Collection, GatewayIntentBits, Partials, REST, Routes} = require('discord.js');
-const {clientId, token} = require('./config.json');
+const {clientid, token} = require('./config.json');
 
 const client = new Client({
 intents:[
@@ -49,11 +49,11 @@ for (const file of eventFiles) {
 }
 
 const rest = new REST().setToken(token);
+
 (async () => {
-    try {
-        const data = await rest.put(Routes.applicationCommands(clientId), {body: commands});
-        console.log(`Reloaded ${data.length} commands`);
-    } catch {e => {console.log(e)}}
+    rest.put(Routes.applicationCommands(clientid), {body:commands})
+    .then(data => console.log(`Reloaded ${data.length} commands`))
+    .catch(e => console.log(e))
 })();
 
 client.login(token);

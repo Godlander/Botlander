@@ -1,53 +1,100 @@
-const {SlashCommandBuilder} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
 const path = require('path');
 const fs = require('fs');
+const perms = require('../permissions');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('faq')
         .setDescription('Shows a faq.')
-        .addStringOption(option =>
-            option.setName('query')
-            .setDescription('query'))
+        .addSubcommand(subcommand => subcommand
+            .setName('query')
+            .setDescription('show an faq')
+            .addStringOption(option => option
+                .setName('faq')
+                .setDescription('faq')
+                .setAutocomplete(true)
+                .setRequired(true)))
+        .addSubcommand(subcommand => subcommand
+            .setName('add')
+            .setDescription('Add or edit a faq')
+            .addStringOption(option => option
+                .setName('faq')
+                .setDescription('faq')
+                .setRequired(true))
+            .addStringOption(option => option
+                .setName('content')
+                .setDescription('content')
+                .setRequired(true))
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages))
+        .addSubcommand(subcommand => subcommand
+            .setName('remove')
+            .setDescription('Remove an faq')
+            .addStringOption(option => option
+                .setName('faq')
+                .setDescription('faq')
+                .setAutocomplete(true)
+                .setRequired(true))
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages))
         .setDMPermission(false),
+    async autocomplete(interaction) {
+        let id = interaction.guildId;
+        const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
+        const globalpath = path.join(__dirname, '../', 'data', 'faq', 'global');
+        let data;
+        if (interaction.options.getSubcommand() === 'query') {
+            try {
+                data = Object.keys({
+                    ...JSON.parse(fs.readFileSync(serverpath)),
+                    ...JSON.parse(fs.readFileSync(globalpath))
+                })
+            } catch {await interaction.respond([]); return;}
+        }
+        else if (interaction.options.getSubcommand() === 'remove') {
+            try {
+                data = Object.keys({
+                    ...JSON.parse(fs.readFileSync(serverpath))
+                })
+            } catch {await interaction.respond([]); return;}
+        }
+        let filtered = data.filter(e => e.startsWith(interaction.options.getFocused()));
+        await interaction.respond(filtered.map(e => ({name:e, value:e})));
+    },
     async execute(interaction) {
         let id = interaction.guildId;
-        const filepath = path.join(__dirname, '../', 'data', id);
-        let data;
+        const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
+        const globalpath = path.join(__dirname, '../', 'data', 'faq', 'global');
+        let data, global;
         try {
-            data = JSON.parse(fs.readFileSync(filepath));
+            data = JSON.parse(fs.readFileSync(serverpath));
+        } catch {data = {}}
+        try {
+            global = JSON.parse(fs.readFileSync(globalpath));
+        } catch {global = {}}
+
+        let faq = interaction.options.getString('faq', true);
+        if (interaction.options.getSubcommand() === 'add') {
+            if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
+            let content = interaction.options.getString('content', true);
+            if (faq in data) interaction.reply({content: `Edited faq \`${faq}\` with: ${content}`});
+            else interaction.reply({content: `Added faq \`${faq}\` with: ${content}`});
+            data[faq] = content;
         }
-        catch {data = {faqs:{}}}
-        let query = interaction.options.getString('query', false) ?? "";
-        query = query.match(/([^\s]+)\s*([\s\S]*)/);
-        if (!query || query[1] == 'all' || query[1] == 'list') {
-            if (Object.keys(data.faqs).length === 0) return interaction.reply({content: `No faqs found.`, ephemeral: true});
-            else {
-                str = Object.keys(data.faqs).join('` `');
-                return interaction.reply(`Available faqs: \`${str}\``);
+        else if (interaction.options.getSubcommand() === 'remove') {
+            if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
+            if (faq in data) {
+                delete data[faq];
+                interaction.reply({content: `Removed faq ${faq}`});
             }
+            else return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
         }
-        else if (query[1] == 'add') {
-            query = query[2].match(/([^\s]+)\s*([\s\S]*)/);
-            if (!query[2]) return interaction.reply({content: `No content for faq.`, ephemeral: true});
-            let content = query[2].replaceAll('\\n','\n');
-            if (query[1] in data.faqs) interaction.reply({content: `Edited faq \`${query[1]}\` with: ${content}`});
-            else interaction.reply({content: `Added faq \`${query[1]}\` with: ${content}`});
-            data.faqs[query[1]] = content;
-        }
-        else if (query[1] == 'remove') {
-            if (query[2] in data.faqs) {
-                delete data.faqs[query[2]];
-                interaction.reply({content: `Removed faq ${query[2]}`});
-            }
-            else return interaction.reply({content: `No faq \`${query[2]}\``, ephemeral: true});
-        }
-        else if (query[1] in data.faqs) {
-            return interaction.reply(data.faqs[query[1]]);
+        else if (interaction.options.getSubcommand() === 'query') {
+            if (faq in data) return interaction.reply(data[faq]);
+            else if (faq in global) return interaction.reply(global[faq]);
         }
         else {
-            return interaction.reply({content: `No faq \`${query[1]}\``, ephemeral: true});
+            return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
         }
-        fs.writeFileSync(filepath, JSON.stringify(data));
+        fs.writeFileSync(serverpath, JSON.stringify(data));
     }
 };

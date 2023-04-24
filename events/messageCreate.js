@@ -1,8 +1,7 @@
 const {Events} = require('discord.js');
-const {clientId, openaiKey} = require('../config.json');
-const {Configuration, OpenAIApi} = require('openai');
+const {clientid, openaikey} = require('../config.json');
 
-var context = [{'role':'system', 'content':'You are Botlander, a sarcastic assistant who is helpful but likes to tease.'}];
+var context = [];
 
 module.exports = {
     name: Events.MessageCreate,
@@ -10,7 +9,7 @@ module.exports = {
         channel = message.channel;
         if (message.author.bot) return;
         //look for botlander action call
-        const regx = new RegExp(`>?(botlander|<@!?${clientId}>)`, 'i');
+        const regx = new RegExp(`>?(botlander|<@!?${clientid}>)`, 'i');
         if (regx.test(message.content)) {
             input = message.content.replace(regx, " ");
             input = input.replace(/'|"/gi, "\$&");
@@ -25,7 +24,7 @@ module.exports = {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + openaiKey
+                    'Authorization': 'Bearer ' + openaikey
                 },
                 body: JSON.stringify({
                     model: "gpt-3.5-turbo",
