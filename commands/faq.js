@@ -53,21 +53,13 @@ module.exports = {
         const globalpath = path.join(__dirname, '../', 'data', 'faq', 'global');
         let data = {};
         if (interaction.options.getSubcommand() === 'query') {
-            try {
-                data = Object.keys({
-                    ...JSON.parse(fs.readFileSync(serverpath)),
-                    ...JSON.parse(fs.readFileSync(globalpath))
-                })
-            } catch {o_O}
+            try {data = {...data,...JSON.parse(fs.readFileSync(globalpath))}} catch {}
+            try {data = {...data,...JSON.parse(fs.readFileSync(serverpath))}} catch {}
         }
         else if (interaction.options.getSubcommand() === 'remove') {
-            try {
-                data = Object.keys({
-                    ...JSON.parse(fs.readFileSync(serverpath))
-                })
-            } catch {o_O}
+            try {data = JSON.parse(fs.readFileSync(serverpath))} catch {}
         }
-        let filtered = data.filter(e => e.startsWith(interaction.options.getFocused()));
+        let filtered = Object.keys(data).filter(e => e.startsWith(interaction.options.getFocused()));
         await interaction.respond(filtered.map(e => ({name:e, value:e})));
     },
     async execute(interaction) {
@@ -78,17 +70,17 @@ module.exports = {
         let global = {};
         try {
             data = JSON.parse(fs.readFileSync(serverpath));
-        } catch {o_O}
+        } catch {}
         try {
             global = JSON.parse(fs.readFileSync(globalpath));
-        } catch {o_O}
+        } catch {}
 
         let faq = interaction.options.getString('faq', true);
         if (interaction.options.getSubcommand() === 'query') {
             let user = interaction.options.getUser('mention', false) ?? '';
             if (user) user = '<@'+user+'>:\n';
-            if (faq in data) return send(interaction, user, data[faq]);
-            else if (faq in global) return send(interaction, user, global[faq]);
+            if (faq in data) return send(interaction, user, data[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
+            else if (faq in global) return send(interaction, user, global[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
         }
         if (interaction.options.getSubcommand() === 'add') {
             if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
