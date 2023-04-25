@@ -63,7 +63,7 @@ module.exports = {
         }
         else {
             let m = input.match(/(\w+)\(([\d.]+), *([\d.]+), *([\d.]+)\)/i);
-            if (m.length != 5) return interaction.reply({content: `Invalid color`, ephemeral: true});
+            if (!m || m.length != 5) return interaction.reply({content: `Invalid color`, ephemeral: true});
             switch (m[1]) {
                 case 'rgb':
                     rgb = {
