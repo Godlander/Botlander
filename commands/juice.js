@@ -5,7 +5,7 @@ module.exports = {
         .setName('juice')
         .setDescription('🧃'),
     async execute(interaction) {
-        interaction.reply({content:'https://giant.gfycat.com/ShoddyGenerousLangur.mp4', fetchReply: true})
+        interaction.reply({content:'https://tenor.com/view/idiot-kid-drinking-orange-juice-gif-13293458', fetchReply: true})
         .then(message => message.react('🧃'));
     }
 };
