@@ -5,6 +5,7 @@ const perms = require('../permissions');
 
 function send(interaction, message, faq) {
     if (typeof faq === 'string' || faq instanceof String) {
+        faq = faq.substring(0, 1999);
         return interaction.reply({content:`${message}\n${faq}`});
     }
     else {
@@ -47,6 +48,7 @@ module.exports = {
                 .setAutocomplete(true)
                 .setRequired(true)))
         .setDMPermission(false),
+
     async autocomplete(interaction) {
         let id = interaction.guildId;
         const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
@@ -62,6 +64,7 @@ module.exports = {
         let filtered = Object.keys(data).filter(e => e.startsWith(interaction.options.getFocused()));
         await interaction.respond(filtered.map(e => ({name:e, value:e})));
     },
+
     async execute(interaction) {
         let id = interaction.guildId;
         const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
