@@ -31,6 +31,7 @@ for (const file of eventFiles) {
         client.on(event.name,(...args) => event.execute(...args));
     }
 }
+
 //collect commands
 const commands = [];
 client.commands = new Collection();
@@ -47,6 +48,7 @@ for (const file of commandFiles) {
         console.log(`/${file} couldn't load`);
     }
 }
+
 //register commands
 const rest = new REST().setToken(token);
 (async () => {
