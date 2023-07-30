@@ -1,6 +1,3 @@
-const {Events} = require('discord.js');
-const {clientid, openaikey} = require('../config.json');
-const perm = require('../permissions');
 const chrono = require('chrono-node');
 const fs = require('fs');
 const reminders = require('../data/reminders.json');

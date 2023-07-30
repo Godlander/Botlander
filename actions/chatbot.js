@@ -1,8 +1,5 @@
-const {Events} = require('discord.js');
 const {clientid, openaikey} = require('../config.json');
-const perm = require('../permissions');
 const whitelist = require('../data/chat/whitelist.json');
-const chrono = require('chrono-node');
 
 module.exports = {
     async execute(message) {
@@ -13,7 +10,6 @@ module.exports = {
         input = input.replace(/'|"/gi, "\$&");
         input = input.replace(/ +/gi, " ");
         input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
-        console.log(chrono.parseDate(input));
         channel.sendTyping();
         console.log("\nInput: " + input);
         fetch('https://api.openai.com/v1/chat/completions', {
