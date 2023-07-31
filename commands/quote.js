@@ -13,7 +13,7 @@ module.exports = {
         'https://discord.com/channels/785153694478893126/1106297119570153522/1106663763282759833'
         if (input.startsWith('https://discord.com/channels/')) {
             let id = input.split('/').splice(4,3);
-            let guild, channel, message, color;
+            let guild, channel, message;
             try {
                 guild = await interaction.client.guilds.fetch(id[0]);
                 channel = await guild.channels.fetch(id[1]);
@@ -24,25 +24,29 @@ module.exports = {
                 console.log(e);
                 return;
             }
-            try {
-                let member = await guild.members.fetch(message.author);
-                color = member.displayColor;
-            }
-            catch {color = 3553599}
-            interaction.reply({embeds:[{
+            embed = {
                 author: {
-                    name: '@'+message.author.tag,
+                    name: "Unknown",
                     url: input,
                     icon_url: message.author.avatarURL(),
                 },
-                color: color,
                 description: message.content ?? ' ',
                 footer: {
                     text: '#'+channel.name,
                     icon_url: guild.iconURL()
                 },
                 timestamp: message.createdAt.toISOString()
-            }],allowedMentions: {repliedUser:false}});
+            };
+            try {
+                let member = await guild.members.fetch(message.author);
+                embed.author.name = member.displayName;
+                embed.color = member.displayColor;
+            } catch {embed.color = 3553599}
+            if (message.attachments.size > 0) {
+                let img = message.attachments.find(a => a.contentType.startsWith("image"));
+                if (img != null) embed.image = {url:img.url};
+            }
+            interaction.reply({embeds:[embed],allowedMentions: {repliedUser:false}});
         }
         else interaction.reply({content: `Invalid message link`, ephemeral: true});
 
