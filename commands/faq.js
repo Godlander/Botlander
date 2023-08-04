@@ -1,6 +1,6 @@
 const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 const perms = require('../permissions');
 
 var global = require("../data/faq/global.json");
@@ -15,6 +15,8 @@ function send(interaction, message, faq) {
         return interaction.reply({content:`${message}`, embeds:[faq]});
     }
 }
+
+var blocked = false;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -110,6 +112,10 @@ module.exports = {
         else {
             return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
         }
-        fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(local[id]));
+        if (!blocked) {
+            blocked = true;
+            await fs.writeFile(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(local[id]));
+            blocked = false;
+        }
     }
 };
