@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, EmbedBuilder} = require('discord.js');
+const {SlashCommandBuilder} = require('discord.js');
 
 function int2hex(i) {
     var hex = i.toString(16);

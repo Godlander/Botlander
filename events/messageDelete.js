@@ -2,7 +2,7 @@ const {Events} = require('discord.js');
 const {clientid} = require('../config.json');
 
 module.exports = {
-    name: Events.MessageCreate,
+    name: Events.MessageDelete,
     async execute(message) {
         //ignore bot messages
         channel = message.channel;
@@ -13,8 +13,6 @@ module.exports = {
         if (!regx.test(message.content)) return;
 
         //look for reminder
-        if (await require('../actions/reminder').execute(message)) return;
-        //chatbot response
-        require('../actions/chatbot').execute(message);
+        require('../actions/reminder').cancel(message);
     }
 };
