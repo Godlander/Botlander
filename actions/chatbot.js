@@ -15,7 +15,11 @@ module.exports = {
         fetch('https://api.openai.com/v1/chat/completions', {
             method: "POST",
             headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
-            body: JSON.stringify({model:"gpt-3.5-turbo",messages:[{role: "user", content: input}]})
+            body: JSON.stringify({
+                    model:"gpt-3.5-turbo",
+                    max_tokens: 1000,
+                    messages:[{role: "user", content: input}]
+                })
         })
         .then(response => response.json())
         .then(data => {
@@ -25,7 +29,7 @@ module.exports = {
             message.reply({
                 content: reply,
                 allowedMentions: {repliedUser:false}
-            }).catch(()=>{channel.send(reply)});
+            }).catch(()=>{return;});
         }).catch(e=>{
             console.log(e);
             channel.send('<@225455864876761088> plz help');

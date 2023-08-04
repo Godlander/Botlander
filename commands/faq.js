@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const perms = require('../permissions');
 
+var global = require("../data/faq/global.json");
+var local = {};
+
 function send(interaction, message, faq) {
     if (typeof faq === 'string' || faq instanceof String) {
         faq = faq.substring(0, 1999);
@@ -51,15 +54,16 @@ module.exports = {
 
     async autocomplete(interaction) {
         let id = interaction.guildId;
-        const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
-        const globalpath = path.join(__dirname, '../', 'data', 'faq', 'global');
         let data = {};
+        if (!local[id]) {
+            try {local[id] = require("../data/faq/" + id + ".json");}
+            catch {local[id] = {};}
+        }
         if (interaction.options.getSubcommand() === 'query') {
-            try {data = {...data,...JSON.parse(fs.readFileSync(globalpath))}} catch {}
-            try {data = {...data,...JSON.parse(fs.readFileSync(serverpath))}} catch {}
+            data = {...global, ...local[id]};
         }
         else if (interaction.options.getSubcommand() === 'remove') {
-            try {data = JSON.parse(fs.readFileSync(serverpath))} catch {}
+            data = local[id];
         }
         let filtered = Object.keys(data).filter(e => e.startsWith(interaction.options.getFocused()));
         await interaction.respond(filtered.map(e => ({name:e, value:e})));
@@ -67,22 +71,16 @@ module.exports = {
 
     async execute(interaction) {
         let id = interaction.guildId;
-        const serverpath = path.join(__dirname, '../', 'data', 'faq', id);
-        const globalpath = path.join(__dirname, '../', 'data', 'faq', 'global');
-        let data = {}
-        let global = {};
-        try {
-            data = JSON.parse(fs.readFileSync(serverpath));
-        } catch {}
-        try {
-            global = JSON.parse(fs.readFileSync(globalpath));
-        } catch {}
+        if (!local[id]) {
+            try {local[id] = require("../data/faq/" + id + ".json");}
+            catch {local[id] = {};}
+        }
 
         let faq = interaction.options.getString('faq', true);
         if (interaction.options.getSubcommand() === 'query') {
             let user = interaction.options.getUser('mention', false) ?? '';
             if (user) user = '<@'+user+'>:\n';
-            if (faq in data) return send(interaction, user, data[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
+            if (faq in local[id]) return send(interaction, user, local[id][faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
             else if (faq in global) return send(interaction, user, global[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
         }
         if (interaction.options.getSubcommand() === 'add') {
@@ -97,14 +95,14 @@ module.exports = {
             else {
                 content = content.replaceAll('\\n', '\n');
             }
-            if (faq in data) send(interaction, `Edited faq \`${faq}\` with:`, content);
+            if (faq in local[id]) send(interaction, `Edited faq \`${faq}\` with:`, content);
             else send(interaction, `Added faq \`${faq}\` with:`, content);
-            data[faq] = content;
+            local[id][faq] = content;
         }
         else if (interaction.options.getSubcommand() === 'remove') {
             if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
-            if (faq in data) {
-                delete data[faq];
+            if (faq in local[id]) {
+                delete local[id][faq];
                 interaction.reply({content: `Removed faq \`${faq}\``});
             }
             else return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
@@ -112,6 +110,6 @@ module.exports = {
         else {
             return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
         }
-        fs.writeFileSync(serverpath, JSON.stringify(data));
+        fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(local[id]));
     }
 };

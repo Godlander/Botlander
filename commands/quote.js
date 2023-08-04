@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, EmbedBuilder} = require('discord.js');
+const {SlashCommandBuilder} = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,9 +24,11 @@ module.exports = {
                 console.log(e);
                 return;
             }
+            let member = await guild.members.fetch(message.author);
             embed = {
+                color: member?.displayColor || 3553599,
                 author: {
-                    name: "Unknown",
+                    name: member?.displayName || "Unknown",
                     url: input,
                     icon_url: message.author.avatarURL(),
                 },
@@ -37,11 +39,6 @@ module.exports = {
                 },
                 timestamp: message.createdAt.toISOString()
             };
-            try {
-                let member = await guild.members.fetch(message.author);
-                embed.author.name = member.displayName;
-                embed.color = member.displayColor;
-            } catch {embed.color = 3553599}
             if (message.attachments.size > 0) {
                 let img = message.attachments.find(a => a.contentType.startsWith("image"));
                 if (img != null) embed.image = {url:img.url};

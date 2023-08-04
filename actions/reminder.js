@@ -1,21 +1,26 @@
 const chrono = require('chrono-node');
 const fs = require('fs');
-const reminders = require('../data/reminders.json');
+
+var reminders = require('../data/reminders.json');
+var sent = {};
 
 module.exports = {
     async reset(client) {
         for (var i = 0; i < reminders.length; i++) {
-            this.remind(client, reminders[i]);
+            if (!sent[i]) this.remind(client, i);
         }
         console.log(reminders.length, "reminders set");
     },
-    async remind(client, rem) {
+    async remind(client, index) {
+        let rem = reminders[index];
+        sent[index] = true;
         let now = new Date();
         let timeout = Math.max(rem.time - now.getTime(), 0);
         if (timeout < 86400000) {
             setTimeout(async () => {
                 let channel, message;
-                reminders.splice(reminders.indexOf(rem),1);
+                reminders.splice(index, 1);
+                delete sent[i];
                 fs.writeFileSync(__dirname + "/../data/reminders.json", JSON.stringify(reminders), (err) => {if (err) console.log(err)});
                 try {
                     channel = await client.channels.fetch(rem.channel)
@@ -40,9 +45,9 @@ module.exports = {
                 }
                 let rem = {"channel": message.channel.id, "message": message.id, "time": Date.parse(time)};
                 reminders.push(rem);
+                this.remind(message.client, reminders.length - 1);
                 channel.send("Ok, " + message.member.displayName + ", I'll remind you <t:" + Math.floor(time.getTime() / 1000) + ":R>");
                 fs.writeFileSync(__dirname + "/../data/reminders.json", JSON.stringify(reminders), (err) => {if (err) console.error(err)});
-                this.remind(message.client, rem);
                 return true;
             }
         }
