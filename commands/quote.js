@@ -10,13 +10,13 @@ module.exports = {
             .setRequired(true)),
     async execute(interaction) {
         let input = interaction.options.getString('message', true).toLowerCase();
-        'https://discord.com/channels/785153694478893126/1106297119570153522/1106663763282759833'
         if (input.startsWith('https://discord.com/channels/')) {
             let id = input.split('/').splice(4,3);
-            let guild, channel, message;
+            let dm, guild, channel, message;
+            dm = id[0] === "@me";
             try {
-                guild = await interaction.client.guilds.fetch(id[0]);
-                channel = await guild.channels.fetch(id[1]);
+                guild = dm || await interaction.client.guilds.fetch(id[0]);
+                channel = await interaction.client.channels.fetch(id[1]);
                 message = await channel.messages.fetch(id[2]);
             }
             catch (e) {
@@ -24,18 +24,18 @@ module.exports = {
                 console.log(e);
                 return;
             }
-            let member = await guild.members.fetch(message.author);
+            let member = dm? channel.recipient : await guild.members.fetch(message.author);
             embed = {
                 color: member?.displayColor || 3553599,
                 author: {
-                    name: member?.displayName || "Unknown",
+                    name: message.author.displayName || message.author.username || "Unknown",
                     url: input,
                     icon_url: message.author.avatarURL(),
                 },
                 description: message.content ?? ' ',
                 footer: {
-                    text: '#'+channel.name,
-                    icon_url: guild.iconURL()
+                    text: dm? member.username : '#'+channel.name,
+                    icon_url: dm? null : guild.iconURL()
                 },
                 timestamp: message.createdAt.toISOString()
             };
