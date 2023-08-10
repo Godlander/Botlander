@@ -61,7 +61,7 @@ module.exports = {
     async autocomplete(interaction : AutocompleteInteraction) {
         const id = interaction.guildId ?? 0;
         let data = {};
-        if (id != 0 && id in local) {
+        if (id != 0 && !(id in local)) {
             try {local[id] = require("../data/faq/" + id + ".json");}
             catch {local[id] = {};}
         }
