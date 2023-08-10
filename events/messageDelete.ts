@@ -1,11 +1,10 @@
-const {Events} = require('discord.js');
-const {clientid} = require('../config.json');
+import { Events, Message } from 'discord.js';
+import { clientid } from '../config.json';
 
 module.exports = {
     name: Events.MessageDelete,
-    async execute(message) {
+    async execute(message : Message) {
         //ignore bot messages
-        channel = message.channel;
         if (message.author.bot) return;
 
         //ignore non botlander calls

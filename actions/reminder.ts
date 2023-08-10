@@ -1,10 +1,16 @@
-const chrono = require('chrono-node');
-const fs = require('fs').promises;
+import * as chrono from 'chrono-node';
+import { Client, Message } from 'discord.js';
+import fs from 'fs/promises';
 
-var reminders = {};
-var sent = {};
+type Reminder = {
+    channel: string,
+    reply: string,
+    time: number
+}
+var reminders : Record<string, Reminder> = {};
+var sent : Record<string, NodeJS.Timeout> = {};
 
-var blocked = false;
+var blocked : boolean = false;
 
 module.exports = {
     async save() {
@@ -15,7 +21,7 @@ module.exports = {
             blocked = false;
         }
     },
-    async reset(client) {
+    async reset(client : Client) {
         //update sent reminders
         reminders = require('../data/reminders.json');
         let set = 0;
@@ -25,66 +31,66 @@ module.exports = {
         }
         console.log(set, "reminders set");
     },
-    async remind(client, id) {
+    async remind(client : Client, id : string) {
         //calculate time
-        let now = new Date();
-        let timeout = Math.max(reminders[id].time - now.getTime(), 0);
+        const now = new Date();
+        const timeout = Math.max(reminders[id].time - now.getTime(), 0);
         //dont set timeout if more than 2 days away
         if (timeout > 86400000) return;
         //mark as sent
-        sent[id] = setTimeout(async () => {
-            //fetch channel and message
-            let channel, message;
-            try {
-                channel = await client.channels.fetch(reminders[id].channel);
-                message = await channel.messages.fetch(id);
-            } catch {}
+        sent[id] = setTimeout(async () => {try {
+            const rem = reminders[id];
             //delete entry from save
             delete reminders[id];
             delete sent[id];
             this.save();
+
+            //fetch channel and message
+            const channel = await client.channels.fetch(rem.channel);
+            if (channel === null || !("messages" in channel)) throw 0;
+            const message = await channel.messages.fetch(id);
             //send reminder if message still exists
             if (message) message.reply("<@" + message.author + ">, here's your reminder.");
-        }, timeout);
+        } catch {}}, timeout);
     },
-    async cancel(message) {
+    async cancel(message : Message) {try {
         //check deleted message is a reminder
         const id = message.id;
         if (!(id in reminders)) return false;
         //delete the reminder
+        const rem = reminders[id];
         clearTimeout(sent[id]);
-        let channel, reply;
-        try {
-            channel = await message.client.channels.fetch(reminders[id].channel);
-            reply = await channel.messages.fetch(reminders[id].reply);
-        } catch {}
-        if (reply) await reply.edit("Reminder canceled");
         delete reminders[id];
         delete sent[id];
         this.save();
+        //edit message
+        const channel = await message.client.channels.fetch(rem.channel);
+        if (channel === null || !("messages" in channel)) throw 0;
+        const reply = await channel.messages.fetch(rem.reply);
+        await reply.edit("Reminder canceled");
         return true;
-    },
-    async execute(message) {
+    } catch {}},
+    async execute(message : Message) {
         //check for remind in message
-        let input = message.content;
+        const input = message.content;
         if (!input.includes("remind")) return false;
         //check for time in message
-        let now = new Date();
-        let time = chrono.parse(input, now, {forwardDate:true, timezone:"PST"});
-        if (time.length === 0) return false;
+        const now = new Date();
+        const gettime = chrono.parse(input, now, {forwardDate:true});
+        if (gettime.length === 0) return false;
         //make sure time is not in the past
-        time = time[0].start.date();
+        const time = gettime[0].start.date();
         console.log(time);
         if (time.getTime() < now.getTime()) { //time in the past
             message.reply({content: 'Cannot remind you of the past.', allowedMentions: {repliedUser:false}});
             return true;
         }
         //set reminder
-        let reply = await message.reply({
-            content: "Ok, " + message.member.displayName + ", I'll remind you <t:" + Math.floor(time.getTime() / 1000) + ":R>",
+        const reply = await message.reply({
+            content: "Ok, " + message.member?.displayName + ", I'll remind you <t:" + Math.floor(time.getTime() / 1000) + ":R>",
             allowedMentions: {repliedUser:false}
         });
-        reminders[message.id] = {"channel": message.channel.id, "reply": reply.id, "time": Date.parse(time)};
+        reminders[message.id] = {"channel": message.channel.id, "reply": reply.id, "time": time.getTime()};
         this.remind(message.client, message.id);
         this.save();
         return true;

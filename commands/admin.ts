@@ -1,7 +1,8 @@
-const {SlashCommandBuilder} = require('discord.js');
-const path = require('path');
-const fs = require('fs').promises;
-const perms = require('../permissions');
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { Commands } from '../bot';
+import path from 'path';
+import fs from 'fs/promises';
+import perms from '../permissions';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,27 +12,27 @@ module.exports = {
             option.setName('command')
             .setDescription('command')
             .setRequired(true)),
-    async execute(interaction) {
+    async execute(interaction : ChatInputCommandInteraction) {
         if (!perms.owner(interaction)) return;
-        let command = interaction.options.getString('command', true).toLowerCase().split(' ');
+        const command = interaction.options.getString('command', true).toLowerCase().split(' ');
+        const ephemeral = command[0].startsWith("pub")? false : true;
         console.log(command);
         try {
-            let ephemeral = command[0].startsWith("pub")? false : true;
             if (command[0].match("shutdown|stop|quit")) {
                 await interaction.reply({content: `shutting down`, ephemeral: ephemeral});
                 process.exit();
             }
             if (command[0].match("reload")) {
-                command = interaction.client.commands.get(command[1]);
-                delete require.cache[require.resolve(`./${command.data.name}.js`)];
+                const cmd = Commands.get(command[1]);
+                delete require.cache[require.resolve(`./${cmd.data.name}.js`)];
                 try {
-                    interaction.client.commands.delete(command.data.name);
-                    const newCommand = require(`./${command.data.name}.js`);
-                    interaction.client.commands.set(newCommand.data.name, newCommand);
+                    Commands.delete(cmd.data.name);
+                    const newCommand = require(`./${cmd.data.name}.js`);
+                    Commands.set(newCommand.data.name, newCommand);
                     await interaction.reply({content: `\`${newCommand.data.name}\` reloaded`, ephemeral: ephemeral});
-                } catch (error) {
-                    console.error(error);
-                    await interaction.reply({content: `\`/${command.data.name}\` couldn't load:\`\`\`${error.message}\`\`\``, ephemeral: ephemeral});
+                } catch (e) {
+                    console.error(e);
+                    await interaction.reply({content: `\`/${cmd.data.name}\` couldn't load:\`\`\`\n${e}\n\`\`\``, ephemeral: ephemeral});
                 }
                 return;
             }
@@ -48,14 +49,14 @@ module.exports = {
                 if (!dir.startsWith("./")) dir = "./" + dir;
                 const stat = await fs.lstat(dir);
                 if (stat.isDirectory()) {
-                    let files = await fs.readdir(dir);
-                    files = '```\n' + files.join('\n') + '\n```';
-                    await interaction.reply({content: files, ephemeral: ephemeral});
+                    const files = await fs.readdir(dir);
+                    const out = '```\n' + files.join('\n') + '\n```';
+                    await interaction.reply({content: out, ephemeral: ephemeral});
                 }
                 else if (stat.isFile()) {
-                    let ext = path.extname(dir).substring(1);
-                    let txt = await fs.readFile(dir);
-                    msg = '```' + ext + '\n' + txt + '\n```';
+                    const ext = path.extname(dir).substring(1);
+                    const txt = await fs.readFile(dir);
+                    const msg = '```' + ext + '\n' + txt + '\n```';
                     if (msg.length < 2000) {
                         await interaction.reply({content: msg, ephemeral: ephemeral});
                     }
@@ -75,7 +76,7 @@ module.exports = {
                 return;
             }
         }
-        catch {e => {
+        catch {(e : any) => {
             console.log(e);
             interaction.reply({content: `something went wrong`, ephemeral: ephemeral});
         }}

@@ -1,10 +1,11 @@
-const {Events} = require('discord.js');
+import { Client, Events } from "discord.js";
+
 const reminders = require("../actions/reminder");
 
 module.exports = {
     name: Events.ClientReady,
     once: true,
-    execute(client) {
+    execute(client : Client) {
         console.log(`ready`);
 
         //check reminders

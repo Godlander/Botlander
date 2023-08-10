@@ -1,10 +1,11 @@
-const {Events} = require('discord.js');
+import { Events, Interaction } from 'discord.js';
+import { Commands } from '../bot'
 
 module.exports = {
     name: Events.InteractionCreate,
-    async execute(interaction) {
+    async execute(interaction : Interaction) {
         if (interaction.isChatInputCommand()) {
-            const command = interaction.client.commands.get(interaction.commandName);
+            const command = Commands.get(interaction.commandName);
             if (!command) {
                 console.error(`No command matching ${interaction.commandName} was found.`);
                 return;
@@ -17,7 +18,7 @@ module.exports = {
             }
         }
         else if (interaction.isAutocomplete()) {
-            const command = interaction.client.commands.get(interaction.commandName);
+            const command = Commands.get(interaction.commandName);
             if (!command) {
                 console.error(`No command matching ${interaction.commandName} was found.`);
                 return;

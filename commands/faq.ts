@@ -1,12 +1,16 @@
-const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
-const path = require('path');
-const fs = require('fs').promises;
-const perms = require('../permissions');
+import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, Message, APIEmbed, PermissionsBitField } from 'discord.js';
+import path from 'path';
+import fs from 'fs/promises';
+import perms from '../permissions';
 
-var global = require("../data/faq/global.json");
-var local = {};
+type Faq = string | APIEmbed
+type ServerFaqs = Record<string, Faq> // Index is the faq key
+type Faqs = Record<string, ServerFaqs> // Index is the server ID
 
-function send(interaction, message, faq) {
+var global : ServerFaqs = require("../data/faq/global.json");
+var local : Faqs = {};
+
+function send(interaction : ChatInputCommandInteraction, message : string, faq : any) {
     if (typeof faq === 'string' || faq instanceof String) {
         faq = faq.substring(0, 1999);
         return interaction.reply({content:`${message}\n${faq}`});
@@ -54,10 +58,10 @@ module.exports = {
                 .setRequired(true)))
         .setDMPermission(false),
 
-    async autocomplete(interaction) {
-        let id = interaction.guildId;
+    async autocomplete(interaction : AutocompleteInteraction) {
+        const id = interaction.guildId ?? 0;
         let data = {};
-        if (!local[id]) {
+        if (id != 0 && id in local) {
             try {local[id] = require("../data/faq/" + id + ".json");}
             catch {local[id] = {};}
         }
@@ -71,9 +75,9 @@ module.exports = {
         await interaction.respond(filtered.map(e => ({name:e, value:e})));
     },
 
-    async execute(interaction) {
-        let id = interaction.guildId;
-        if (!local[id]) {
+    async execute(interaction : ChatInputCommandInteraction) {
+        let id = interaction.guildId ?? 0;
+        if (id != 0 && id in local) {
             try {local[id] = require("../data/faq/" + id + ".json");}
             catch {local[id] = {};}
         }
@@ -86,12 +90,12 @@ module.exports = {
             else if (faq in global) return send(interaction, user, global[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
         }
         if (interaction.options.getSubcommand() === 'add') {
-            if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
+            if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
             let content = interaction.options.getString('content', true)
             if (content.startsWith('{')) {
                 try {
-                    content = JSON.parse(content);
-                    if (!(typeof content.description === 'string' || content.description instanceof String)) throw(0);
+                    const embed = JSON.parse(content);
+                    if (!(typeof embed.description === 'string' || embed.description instanceof String)) throw(0);
                 } catch {return interaction.reply({content:"Invalid embed.", ephemeral:true});}
             }
             else {
@@ -102,7 +106,7 @@ module.exports = {
             local[id][faq] = content;
         }
         else if (interaction.options.getSubcommand() === 'remove') {
-            if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
+            if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
             if (faq in local[id]) {
                 delete local[id][faq];
                 interaction.reply({content: `Removed faq \`${faq}\``});
