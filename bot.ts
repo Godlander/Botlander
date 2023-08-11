@@ -26,11 +26,15 @@ const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'
 for (const file of eventFiles) {
     const filePath = path.join(eventsPath, file);
     const event = require(filePath);
-    if (event.once) {
-        console.log(event.name);
-        client.once(event.name, (...args) => event.execute(...args));
+    if ('event' in event && 'run' in event) {
+        if (event.event.once) {
+            client.once(event.event.name, (...args) => event.run(...args));
+        } else {
+            client.on(event.event.name, (...args) => event.run(...args));
+        }
+        console.log(`event ${file} loaded`)
     } else {
-        client.on(event.name, (...args) => event.execute(...args));
+        console.log(`event ${file} couldn't load`);
     }
 }
 
@@ -41,9 +45,9 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
-    if ('data' in command && 'execute' in command) {
-        Commands.set(command.data.name, command);
-        setcommands.push(command.data.toJSON());
+    if ('slashcommand' in command && 'run' in command) {
+        Commands.set(command.slashcommand.name, command);
+        setcommands.push(command.slashcommand.toJSON());
         console.log(`/${file} loaded`)
     } else {
         console.log(`/${file} couldn't load`);

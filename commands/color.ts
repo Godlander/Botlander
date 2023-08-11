@@ -1,4 +1,12 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { APIEmbed, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+
+export const slashcommand = new SlashCommandBuilder()
+.setName('color')
+.setDescription('Converts colors.')
+.addStringOption(option =>
+    option.setName('color')
+    .setDescription('color')
+    .setRequired(true))
 
 type Color = {
     r : number,
@@ -44,76 +52,75 @@ function vec32rgb(c : Color) : Color {
         b: Math.round(c.b*255)
     }
 }
-
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('color')
-        .setDescription('Converts colors.')
-        .addStringOption(option =>
-            option.setName('color')
-            .setDescription('color')
-            .setRequired(true)),
-    async execute(interaction : ChatInputCommandInteraction) {
-        let hex : string,
-            rgb : Color | null = null,
-            vec3 : stringColor,
-            int : number,
-            bin : string;
-        let input = interaction.options.getString('color', true).toLowerCase();
-        let args = input.split(' ');
-        //look for hex
-        let m = input.match(/#([0-9a-f]{6})/i);
-        if (m) {
-            hex = m[1];
-            rgb = hex2rgb(hex);
+export function parse(input : string) : APIEmbed {
+    let hex : string,
+        rgb : Color | undefined,
+        vec3 : stringColor,
+        int : number,
+        bin : string;
+    const args = input.split(' ');
+    let m = input.match(/#([0-9a-f]{6})/i);
+    if (m) {
+        hex = m[1];
+        rgb = hex2rgb(hex);
+    }
+    //look for int
+    else if (args[0] === 'int') {
+        int = parseInt(args[2]);
+        hex = int.toString(16).padStart(6, '0');
+        rgb = hex2rgb(hex);
+    }
+    //look for bin
+    else if (args[0] === 'bin') {
+        bin = input.slice(4).replace(/\s/g,'');
+        int = parseInt(bin, 2);
+        hex = int.toString(16).padStart(6, '0');
+        rgb = hex2rgb(hex);
+    }
+    //look for rgb or vec3
+    else {
+        let m = input.match(/(\w+)\(([\d.]+), *([\d.]+), *([\d.]+)\)/i);
+        if (!m || m.length != 5) throw 0;
+        switch (m[1]) {
+            case 'rgb':
+                rgb = {
+                    r: parseInt(m[2]),
+                    g: parseInt(m[3]),
+                    b: parseInt(m[4])
+                };
+                break;
+            case 'vec3':
+                rgb = vec32rgb({
+                    r: parseFloat(m[2]),
+                    g: parseFloat(m[3]),
+                    b: parseFloat(m[4])
+                });
+                break;
         }
-        //look for int
-        else if (args[0] === 'int') {
-            int = parseInt(args[2]);
-            hex = int.toString(16).padStart(6, '0');
-            rgb = hex2rgb(hex);
-        }
-        //look for bin
-        else if (args[0] === 'bin') {
-            bin = input.slice(4).replace(/\s/g,'');
-            int = parseInt(bin, 2);
-            hex = int.toString(16).padStart(6, '0');
-            rgb = hex2rgb(hex);
-        }
-        //look for rgb or vec3
-        else {
-            let m = input.match(/(\w+)\(([\d.]+), *([\d.]+), *([\d.]+)\)/i);
-            if (!m || m.length != 5) return interaction.reply({content: `Invalid color`, ephemeral: true});
-            switch (m[1]) {
-                case 'rgb':
-                    rgb = {
-                        r: parseInt(m[2]),
-                        g: parseInt(m[3]),
-                        b: parseInt(m[4])
-                    };
-                    break;
-                case 'vec3':
-                    rgb = vec32rgb({
-                        r: parseFloat(m[2]),
-                        g: parseFloat(m[3]),
-                        b: parseFloat(m[4])
-                    });
-                    break;
-            }
-        }
-        if (rgb === null) return interaction.reply({content: `Invalid color`, ephemeral: true});
-        hex ??= rgb2hex(rgb);
-        vec3 ??= rgb2vec3(rgb);
-        int ??= parseInt(hex, 16);
-        bin ??= parseInt(hex, 16).toString(2).padStart(24, '0');
-        bin = bin.match(/.{4}/g)?.join(' ') ?? '';
-        interaction.reply({embeds:[{
-            color: int,
+    }
+    if (rgb === undefined) throw 0;
+    hex ??= rgb2hex(rgb);
+    vec3 ??= rgb2vec3(rgb);
+    int ??= parseInt(hex, 16);
+    bin ??= parseInt(hex, 16).toString(2).padStart(24, '0');
+    bin = bin.match(/.{4}/g)?.join(' ') ?? '';
+    return {color: int,
             description:'`#'+hex+'`\n'+
                         '`rgb('+rgb.r+', '+rgb.g+', '+rgb.b+')`\n'+
                         '`vec3('+vec3.r+', '+vec3.g+', '+vec3.b+')`\n'+
                         '`int '+int+'`\n'+
-                        '`bin '+bin+'`'
-        }]});
+                        '`bin '+bin+'`'};
+}
+
+export async function run(interaction : ChatInputCommandInteraction) {
+    const input = interaction.options.getString('color', true).toLowerCase();
+    let out;
+    try {
+        out = parse(input);
     }
+    catch {
+        interaction.reply({content: `Invalid color`, ephemeral: true});
+        return;
+    }
+    interaction.reply({embeds:[out]});
 }
