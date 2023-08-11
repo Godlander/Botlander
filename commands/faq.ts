@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, Message, APIEmbed, PermissionsBitField } from 'discord.js';
 import path from 'path';
-import fs from 'fs/promises';
+import fs from 'fs';
 import perms from '../permissions';
 
 export const slashcommand = new SlashCommandBuilder()
@@ -39,89 +39,96 @@ export const slashcommand = new SlashCommandBuilder()
 .setDMPermission(false)
 
 type Faq = string | APIEmbed
-type ServerFaqs = Record<string, Faq> // Index is the faq key
-type Faqs = Record<string, ServerFaqs> // Index is the server ID
+type FaqList = Record<string, Faq> // Index is the faq key
+type FaqCache = Record<string, FaqList> // Index is the server ID
 
-var global : ServerFaqs = require("../data/faq/global.json");
-var local : Faqs = {};
+export class FAQS {
+    global : FaqList = require('../data/faq/global.json');
+    local : FaqCache = {};
+    //return data from cache or cache from file
+    cache(id: string, global : boolean = false) : FaqList {
+        let data : FaqList = {};
+        //if global search include global faqs
+        if (global) data = this.global;
+        //cache local faq
+        if (!(id in this.local)) {
+            try {this.local[id] = require(`../data/faq/${id}.json`);}
+            catch {this.local[id] = {};}
+        }
+        //return data
+        data = {...data, ...this.local[id]};
+        return data;
+    }
+    //search for faqs for autocomplete
+    search(id : string, name : string, global : boolean = false) : string[] {
+        const data = this.cache(id, global);
+        //filter and return results
+        return Object.keys(data).filter(e => e.includes(name));
+    }
+    //get one faq
+    get(id : string, name : string) : Faq | undefined {
+        const data = this.cache(id);
+        //if faq doesn't exist
+        if (!(name in data)) return;
+        //return if exists
+        return data[name];
+    }
+    //add faq
+    add(id : string, name : string, content : string) : boolean {
+        const data = this.cache(id, false);
+        const edit = name in data;
+        //try storing as embed, string otherwise
+        let faq : Faq;
+        let o = JSON.parse(content);
+        if (o && typeof o === 'object') faq = o;
+        else faq = content.substring(0, 1999);
+        this.local[id][name] = faq;
+        return edit;
+    }
+    //remove faq
+    remove(id : string, name : string) : boolean {
+        const data = this.cache(id);
+        if (!(name in data)) return false;
+        delete this.local[id][name];
+        return true;
+    }
+}
+const FAQ = new FAQS();
 var blocked = false;
 
-function send(interaction : ChatInputCommandInteraction, message : string, faq : any) {
-    if (typeof faq === 'string' || faq instanceof String) {
-        faq = faq.substring(0, 1999);
-        return interaction.reply({content:`${message}\n${faq}`});
-    }
-    else {
-        return interaction.reply({content:`${message}`, embeds:[faq]});
-    }
+function send(interaction : ChatInputCommandInteraction, message : string, faq : Faq) {
+    if (typeof faq === 'string') interaction.reply({content:`${message}\n${faq}`});
+    else interaction.reply({content:`${message}`, embeds:[faq]});
 }
 
 export async function autocomplete(interaction : AutocompleteInteraction) {
-    const id = interaction.guildId ?? 0;
-    let data = {};
-    if (id != 0 && !(id in local)) {
-        try {local[id] = require("../data/faq/" + id + ".json");}
-        catch {local[id] = {};}
-    }
-    if (interaction.options.getSubcommand() === 'query') {
-        data = {...global, ...local[id]};
-    }
-    else if (interaction.options.getSubcommand() === 'remove') {
-        data = local[id];
-    }
-    let filtered = Object.keys(data).filter(e => e.startsWith(interaction.options.getFocused()));
-    await interaction.respond(filtered.map(e => ({name:e, value:e})));
+    const id = interaction.guildId ?? undefined;
+    if (!id) return;
+    const list = FAQ.search(id, interaction.options.getFocused());
+    await interaction.respond(list.map(e => ({name:e, value:e})));
 }
 
 export async function run(interaction : ChatInputCommandInteraction) {
-    let id = interaction.guildId ?? 0;
-    if (id != 0 && id in local) {
-        try {local[id] = require("../data/faq/" + id + ".json");}
-        catch {local[id] = {};}
-    }
-
-    let faq = interaction.options.getString('faq', true);
+    const id = interaction.guildId ?? undefined;
+    if (!id) return;
+    const tag = interaction.options.getString('faq', true);
     if (interaction.options.getSubcommand() === 'query') {
-        let user = interaction.options.getUser('mention', false) ?? '';
-        if (user) user = '<@'+user+'>:\n';
-        if (faq in local[id]) send(interaction, user, local[id][faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
-        else if (faq in global) send(interaction, user, global[faq]).catch(e=>interaction.reply({content:JSON.stringify(e), ephemeral:true}));
-        return;
+        const mention = `<@${interaction.options.getUser('mention', false)}>:` ?? '';
+        const faq = FAQ.get(id, tag);
+        if (!faq) return;
+        send(interaction, mention, faq);
     }
-
-    if (interaction.options.getSubcommand() === 'add') {
+    else if (interaction.options.getSubcommand() === 'add') {
         if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
-        let content = interaction.options.getString('content', true)
-        if (content.startsWith('{')) {
-            try {
-                const embed = JSON.parse(content);
-                if (!(typeof embed.description === 'string' || embed.description instanceof String)) throw(0);
-            } catch {return interaction.reply({content:"Invalid embed.", ephemeral:true});}
-        }
-        else {
-            content = content.replaceAll('\\n', '\n');
-        }
-        if (faq in local[id]) send(interaction, `Edited faq \`${faq}\` with:`, content);
-        else send(interaction, `Added faq \`${faq}\` with:`, content);
-        local[id][faq] = content;
-        return;
+        const content = interaction.options.getString('content', true)
+        if (FAQ.add(id, tag, content)) send(interaction, `Edited faq \`${tag}\` with:`, content);
+        else send(interaction, `Added faq \`${tag}\` with:`, content);
+        fs.writeFileSync(`../data/faq/${id}.json`, JSON.stringify(FAQ.local[id]));
     }
-
-    if (interaction.options.getSubcommand() === 'remove') {
+    else if (interaction.options.getSubcommand() === 'remove') {
         if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
-        if (faq in local[id]) {
-            delete local[id][faq];
-            interaction.reply({content: `Removed faq \`${faq}\``});
-        }
-        else return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
-    }
-    else {
-        return interaction.reply({content: `No faq \`${faq}\``, ephemeral: true});
-    }
-
-    if (!blocked) {
-        blocked = true;
-        await fs.writeFile(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(local[id]));
-        blocked = false;
+        if (FAQ.remove(id, tag)) interaction.reply({content: `Removed faq \`${tag}\``});
+        else interaction.reply({content: `No faq \`${tag}\``, ephemeral: true});
+        fs.writeFileSync(`../data/faq/${id}.json`, JSON.stringify(FAQ.local[id]));
     }
 }

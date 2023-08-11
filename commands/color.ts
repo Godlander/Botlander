@@ -13,11 +13,6 @@ type Color = {
     g : number,
     b : number
 }
-type stringColor = {
-    r : string,
-    g : string,
-    b : string
-}
 
 function int2hex(i : number) {
     let hex = i.toString(16);
@@ -36,14 +31,11 @@ function rgb2hex(c : Color) : string {
     return int2hex(c.r) + int2hex(c.g) + int2hex(c.b);
 }
 function rgb2vec3(c : Color) {
-    let r = c.r/255.;
-    let g = c.g/255.;
-    let b = c.b/255.;
     return {
-        r: ''+r+(Number.isInteger(r)?'.0':''),
-        g: ''+g+(Number.isInteger(g)?'.0':''),
-        b: ''+b+(Number.isInteger(b)?'.0':'')
-    };
+        r: c.r/255.,
+        g: c.g/255.,
+        b: c.b/255.
+    }
 }
 function vec32rgb(c : Color) : Color {
     return {
@@ -55,7 +47,7 @@ function vec32rgb(c : Color) : Color {
 export function parse(input : string) : APIEmbed {
     let hex : string,
         rgb : Color | undefined,
-        vec3 : stringColor,
+        vec3 : Color,
         int : number,
         bin : string;
     const args = input.split(' ');
@@ -107,7 +99,10 @@ export function parse(input : string) : APIEmbed {
     return {color: int,
             description:'`#'+hex+'`\n'+
                         '`rgb('+rgb.r+', '+rgb.g+', '+rgb.b+')`\n'+
-                        '`vec3('+vec3.r+', '+vec3.g+', '+vec3.b+')`\n'+
+                        '`vec3('+
+                            vec3.r+(Number.isInteger(vec3.r)?'.0':'')+', '+
+                            vec3.g+(Number.isInteger(vec3.g)?'.0':'')+', '+
+                            vec3.b+(Number.isInteger(vec3.b)?'.0':'')+')`\n'+
                         '`int '+int+'`\n'+
                         '`bin '+bin+'`'};
 }
