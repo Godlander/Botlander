@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, Message, APIEmbed, PermissionsBitField } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, Message, APIEmbed, PermissionsBitField, ErrorEvent, EmbedBuilder, Embed } from 'discord.js';
 import path from 'path';
 import fs from 'fs';
 import perms from '../permissions';
@@ -38,9 +38,9 @@ export const slashcommand = new SlashCommandBuilder()
         .setRequired(true)))
 .setDMPermission(false)
 
-type Faq = string | APIEmbed
-type FaqList = Record<string, Faq> // Index is the faq key
-type FaqCache = Record<string, FaqList> // Index is the server ID
+type Faq = string | APIEmbed;
+type FaqList = Record<string, Faq>; // Index is the faq key
+type FaqCache = Record<string, FaqList>; // Index is the server ID
 
 export class FAQS {
     global : FaqList = require('../data/faq/global.json');
@@ -74,15 +74,10 @@ export class FAQS {
         return data[name];
     }
     //add faq
-    add(id : string, name : string, content : string) : boolean {
+    add(id : string, name : string, content : Faq) : boolean {
         const data = this.cache(id, false);
         const edit = name in data;
-        //try storing as embed, string otherwise
-        let faq : Faq;
-        let o = JSON.parse(content);
-        if (o && typeof o === 'object') faq = o;
-        else faq = content.substring(0, 1999);
-        this.local[id][name] = faq;
+        this.local[id][name] = content;
         return edit;
     }
     //remove faq
@@ -94,11 +89,21 @@ export class FAQS {
     }
 }
 const FAQ = new FAQS();
-var blocked = false;
 
-function send(interaction : ChatInputCommandInteraction, message : string, faq : Faq) {
-    if (typeof faq === 'string') interaction.reply({content:`${message}\n${faq}`});
-    else interaction.reply({content:`${message}`, embeds:[faq]});
+async function send(interaction : ChatInputCommandInteraction, message : string, faq : Faq) {
+    try {
+        if (typeof faq === 'string') { //try sending embed if not string
+            await interaction.reply({content:`${message}\n${faq}`});
+        }
+        else {
+            await interaction.reply({content:`${message}`, embeds:[faq]});
+        }
+    }
+    //catch sending errors
+    catch (error : any) {
+        if ('rawError' in error) error = error.rawError;
+        interaction.reply({content:JSON.stringify(error).substring(0,1999), ephemeral:true});
+    }
 }
 
 export async function autocomplete(interaction : AutocompleteInteraction) {
@@ -120,15 +125,20 @@ export async function run(interaction : ChatInputCommandInteraction) {
     }
     else if (interaction.options.getSubcommand() === 'add') {
         if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
-        const content = interaction.options.getString('content', true)
+        const input = interaction.options.getString('content', true)
+
+        let content : Faq;
+        try {content = JSON.parse(input);}
+        catch {content = input;}
+
         if (FAQ.add(id, tag, content)) send(interaction, `Edited faq \`${tag}\` with:`, content);
         else send(interaction, `Added faq \`${tag}\` with:`, content);
-        fs.writeFileSync(`../data/faq/${id}.json`, JSON.stringify(FAQ.local[id]));
+        fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(FAQ.local[id]));
     }
     else if (interaction.options.getSubcommand() === 'remove') {
         if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
         if (FAQ.remove(id, tag)) interaction.reply({content: `Removed faq \`${tag}\``});
         else interaction.reply({content: `No faq \`${tag}\``, ephemeral: true});
-        fs.writeFileSync(`../data/faq/${id}.json`, JSON.stringify(FAQ.local[id]));
+        fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(FAQ.local[id]));
     }
 }
