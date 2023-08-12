@@ -109,7 +109,13 @@ async function send(interaction : ChatInputCommandInteraction, message : string,
 export async function autocomplete(interaction : AutocompleteInteraction) {
     const id = interaction.guildId ?? undefined;
     if (!id) return;
-    const list = FAQ.search(id, interaction.options.getFocused());
+    let list : string[] = [];
+    if (interaction.options.getSubcommand() === 'query') {
+        list = FAQ.search(id, interaction.options.getFocused(), true);
+    }
+    else if (interaction.options.getSubcommand() === 'remove') {
+        list = FAQ.search(id, interaction.options.getFocused(), false);
+    }
     await interaction.respond(list.map(e => ({name:e, value:e})));
 }
 
@@ -118,7 +124,8 @@ export async function run(interaction : ChatInputCommandInteraction) {
     if (!id) return;
     const tag = interaction.options.getString('faq', true);
     if (interaction.options.getSubcommand() === 'query') {
-        const mention = `<@${interaction.options.getUser('mention', false)}>:` ?? '';
+        const user = interaction.options.getUser('mention', false);
+        const mention = user? `<@${user}>:` : '';
         const faq = FAQ.get(id, tag);
         if (!faq) return;
         send(interaction, mention, faq);
