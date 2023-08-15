@@ -112,10 +112,10 @@ export async function autocomplete(interaction : AutocompleteInteraction) {
     if (!id) return;
     let list : string[] = [];
     if (interaction.options.getSubcommand() === 'query') {
-        list = FAQ.search(id, interaction.options.getFocused(), true);
+        list = FAQ.search(id, input, true);
     }
     else if (interaction.options.getSubcommand() === 'remove') {
-        list = FAQ.search(id, interaction.options.getFocused(), false);
+        list = FAQ.search(id, input, false);
     }
     await interaction.respond(list.map(e => ({name:e, value:e})));
 }
