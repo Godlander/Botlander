@@ -70,7 +70,7 @@ module.exports = {
         await reply.edit("Reminder canceled");
         return true;
     } catch {}},
-    async execute(message : Message) {
+    async run(message : Message) {
         //check for remind in message
         const input = message.content;
         if (!input.includes("remind")) return false;

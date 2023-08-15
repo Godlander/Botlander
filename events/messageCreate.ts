@@ -5,6 +5,8 @@ export const event = {
     name: Events.MessageCreate,
 }
 
+export const Actions = ['reminder', 'timestamp'];
+
 export async function run(message : Message) {
     //ignore bot messages
     if (message.author.bot) return;
@@ -13,8 +15,10 @@ export async function run(message : Message) {
     const regx : RegExp = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
     if (!regx.test(message.content)) return;
 
-    //look for reminder
-    if (await require('../actions/reminder').execute(message)) return;
+    //look for actions
+    for (const action of Actions) {
+        if (await require('../actions/'+action).run(message)) return;
+    }
     //chatbot response
-    require('../actions/chatbot').execute(message);
+    require('../actions/chatbot').run(message);
 }

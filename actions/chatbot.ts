@@ -3,7 +3,7 @@ import { clientid, openaikey } from '../config.json';
 import whitelist from '../data/chat/whitelist.json';
 
 module.exports = {
-    async execute(message : Message) {
+    async run(message : Message) {
         if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
         const regx = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
         const input = message.content.replace(regx, " ").replace(/'|"/gi, "\$&").replace(/ +/gi, " ")

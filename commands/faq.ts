@@ -107,9 +107,10 @@ async function send(interaction : ChatInputCommandInteraction, message : string,
 }
 
 export async function autocomplete(interaction : AutocompleteInteraction) {
+    const input = interaction.options.getString('faq', true);
     const id = interaction.guildId ?? undefined;
     if (!id) return;
-    const list = FAQ.search(id, interaction.options.getFocused());
+    const list = FAQ.search(id, input);
     await interaction.respond(list.map(e => ({name:e, value:e})));
 }
 
