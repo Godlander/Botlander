@@ -1,4 +1,4 @@
-import { APIEmbed, ChatInputCommandInteraction, DMChannel, Embed, Guild, GuildMember, SlashCommandBuilder, TextChannel, User } from 'discord.js';
+import { APIEmbed, ChatInputCommandInteraction, DMChannel, Guild, GuildMember, SlashCommandBuilder, TextChannel, User } from 'discord.js';
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('quote')

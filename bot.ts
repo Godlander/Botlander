@@ -3,8 +3,6 @@ import path from 'path';
 import { Client, Collection, GatewayIntentBits, Partials, REST, Routes } from 'discord.js';
 import { clientid, token } from './config.json';
 
-export const Commands: Collection<string, any> = new Collection();
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -20,17 +18,35 @@ const client = new Client({
     ]
 });
 
+//collect actions
+export const CreateActions: any[] = [];
+export const DeleteActions: any[] = [];
+const actionPath = path.join(__dirname, 'actions');
+const actionFiles = fs.readdirSync(actionPath).filter(file => file.endsWith('.ts'));
+for (const file of actionFiles) {
+    const filePath = path.join(actionPath, file);
+    const { oncreate, ondelete } = require(filePath);
+    if (oncreate) {
+        CreateActions.push(oncreate);
+        console.log(`oncreate ${file} loaded`);
+    }
+    if (ondelete) {
+        DeleteActions.push(ondelete);
+        console.log(`ondelete ${file} loaded`);
+    }
+}
+
 //collect events
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
+const eventPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventPath).filter(file => file.endsWith('.ts'));
 for (const file of eventFiles) {
-    const filePath = path.join(eventsPath, file);
+    const filePath = path.join(eventPath, file);
     const event = require(filePath);
-    if ('event' in event && 'run' in event) {
-        if (event.event.once) {
-            client.once(event.event.name, (...args) => event.run(...args));
+    if ('run' in event) {
+        if (event.once) {
+            client.once(file, (...args) => event.run(...args));
         } else {
-            client.on(event.event.name, (...args) => event.run(...args));
+            client.on(file, (...args) => event.run(...args));
         }
         console.log(`event ${file} loaded`)
     } else {
@@ -39,7 +55,8 @@ for (const file of eventFiles) {
 }
 
 //collect commands
-const setcommands: NodeRequire[] = [];
+export const Commands: Collection<string, any> = new Collection();
+const setcommands: any[] = [];
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 for (const file of commandFiles) {

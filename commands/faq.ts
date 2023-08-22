@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, Message, APIEmbed, PermissionsBitField, ErrorEvent, EmbedBuilder, Embed } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, AutocompleteInteraction, ChatInputCommandInteraction, APIEmbed, PermissionsBitField } from 'discord.js';
 import path from 'path';
 import fs from 'fs';
 import perms from '../permissions';

@@ -59,7 +59,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
     }
     //get timestamp
     const timestamp = gettimestamp(input);
-    let out = `<t:${timestamp}:${format}>`;
+    let out = `<t:${timestamp}:${format}> \`<t:${timestamp}:${format}>\``;
     //if no formatting just get number
     if (format === 'N') out = ''+timestamp;
     interaction.reply(out);
