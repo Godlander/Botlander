@@ -1,7 +1,9 @@
-import { Interaction } from 'discord.js';
+import { Events, Interaction } from 'discord.js';
 import { Commands } from '../bot'
 
-export async function run(interaction : Interaction) {
+export const name = Events.InteractionCreate;
+
+export async function run (interaction : Interaction) {
     if (interaction.isChatInputCommand()) {
         const command = Commands.get(interaction.commandName);
         if (!command) {

@@ -1,14 +1,12 @@
-import { Message } from 'discord.js';
-import { clientid } from '../config.json';
+import { Events, Message } from 'discord.js';
 import { DeleteActions } from '../bot';
+import perms from '../permissions';
 
-export async function run(message : Message) {
-    //ignore bot messages
-    if (message.author?.bot) return;
+export const name = Events.MessageDelete;
 
-    //ignore non botlander calls
-    const regx = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
-    if (!regx.test(message.content)) return;
+export async function run (message : Message) {
+    //ignore bot messages and non botlander calls
+    if (perms.bot(message) || !perms.botlander(message)) return;
 
     //look for actions
     for (const action of DeleteActions) {

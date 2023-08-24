@@ -24,8 +24,7 @@ export const DeleteActions: any[] = [];
 const actionPath = path.join(__dirname, 'actions');
 const actionFiles = fs.readdirSync(actionPath).filter(file => file.endsWith('.ts'));
 for (const file of actionFiles) {
-    const filePath = path.join(actionPath, file);
-    const { oncreate, ondelete } = require(filePath);
+    const {oncreate, ondelete} = require(path.join(actionPath, file));
     if (oncreate) {
         CreateActions.push(oncreate);
         console.log(`oncreate ${file} loaded`);
@@ -40,13 +39,12 @@ for (const file of actionFiles) {
 const eventPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventPath).filter(file => file.endsWith('.ts'));
 for (const file of eventFiles) {
-    const filePath = path.join(eventPath, file);
-    const event = require(filePath);
-    if ('run' in event) {
-        if (event.once) {
-            client.once(file, (...args) => event.run(...args));
+    const {name, once, run} = require(path.join(eventPath, file));
+    if (name && run) {
+        if (once) {
+            client.once(name, (...args) => run(...args));
         } else {
-            client.on(file, (...args) => event.run(...args));
+            client.on(name, (...args) => run(...args));
         }
         console.log(`event ${file} loaded`)
     } else {
@@ -60,8 +58,7 @@ const setcommands: any[] = [];
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
+    const command = require(path.join(commandsPath, file));
     if ('slashcommand' in command && 'run' in command) {
         Commands.set(command.slashcommand.name, command);
         setcommands.push(command.slashcommand.toJSON());

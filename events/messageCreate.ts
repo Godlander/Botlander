@@ -1,20 +1,23 @@
-import { Message } from 'discord.js';
-import { clientid } from '../config.json';
+import { Events, Message } from 'discord.js';
 import { CreateActions } from '../bot';
+import perms from '../permissions';
 import chatbot from '../actions/chatbot';
 
-export async function run(message : Message) {
-    //ignore bot messages
-    if (message.author?.bot) return;
+export const name = Events.MessageCreate;
 
-    //ignore non botlander calls
-    const regx = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
-    if (!regx.test(message.content)) return;
+export async function run (message : Message) {
+    //ignore bot messages and non botlander calls
+    if (perms.bot(message) || !perms.botlander(message)) return;
+
+    message.channel.sendTyping();
+    const typing = setInterval(()=>{message.channel.sendTyping()}, 5000);
 
     //look for actions
     for (const action of CreateActions) {
         if (await action(message)) return;
     }
     //chatbot response
-    chatbot(message);
+    await chatbot(message);
+
+    clearInterval(typing);
 }

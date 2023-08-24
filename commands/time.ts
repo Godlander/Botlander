@@ -54,7 +54,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
     //if already timestamp just spit it back
     const reg = input.match(/<t:\d+:[TDFR]>/gi);
     if (reg) {
-        interaction.reply(reg[0]);
+        interaction.reply(`${reg[0]} \`${reg[0]}\``);
         return;
     }
     //get timestamp
