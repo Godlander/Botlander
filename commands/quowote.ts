@@ -42,11 +42,11 @@ export function owofy(text : string) {
         return stutter;
     })
     //add random uwu postfixes
-    .replace('\n', (s) => {
-        if (Math.floor(Math.random() * 2) > 0) return s; //1/2 chance to stutter
+    .replace(/\n+/g, (s) => {
+        if (Math.floor(Math.random() * 2) > 0) return s; //1/2 chance to append postfix
         return "  " + owopost[Math.floor(Math.random()*owopost.length)] + s;
     })
-    + "  " + owopost[Math.floor(Math.random()*owopost.length)];
+    + "  " + owopost[Math.floor(Math.random()*owopost.length)]; //postfix at the end
 }
 
 export async function run(interaction : ChatInputCommandInteraction) {
