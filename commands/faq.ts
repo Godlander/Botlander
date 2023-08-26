@@ -8,32 +8,35 @@ export const slashcommand = new SlashCommandBuilder()
 .setDescription('Shows a faq.')
 .addSubcommand(subcommand => subcommand
     .setName('query')
-    .setDescription('show an faq')
+    .setDescription('Show an faq')
     .addStringOption(option => option
         .setName('faq')
-        .setDescription('faq')
+        .setDescription('Faq to show')
         .setAutocomplete(true)
         .setRequired(true))
     .addUserOption(option => option
         .setName('mention')
-        .setDescription('Mentions a user in the response')))
+        .setDescription('Mentions a user in the response'))
+    .addBooleanOption(option => option
+        .setName('raw')
+        .setDescription('Sends the raw json if faq is an embed')))
 .addSubcommand(subcommand => subcommand
     .setName('add')
     .setDescription('Add or edit a faq')
     .addStringOption(option => option
         .setName('faq')
-        .setDescription('faq')
+        .setDescription('Faq to add or edit')
         .setRequired(true))
     .addStringOption(option => option
         .setName('content')
-        .setDescription('content')
+        .setDescription('New content for the faq')
         .setRequired(true)))
 .addSubcommand(subcommand => subcommand
     .setName('remove')
     .setDescription('Remove an faq')
     .addStringOption(option => option
         .setName('faq')
-        .setDescription('faq')
+        .setDescription('Faq to remove')
         .setAutocomplete(true)
         .setRequired(true)))
 .setDMPermission(false)
@@ -47,9 +50,8 @@ export class FAQS {
     local : FaqCache = {};
     //return data from cache or cache from file
     cache(id: string, global : boolean = false) : FaqList {
-        let data : FaqList = {};
         //if global search include global faqs
-        if (global) data = this.global;
+        let data : FaqList = global? this.global : {};
         //cache local faq
         if (!(id in this.local)) {
             try {this.local[id] = require(`../data/faq/${id}.json`);}
@@ -67,7 +69,7 @@ export class FAQS {
     }
     //get one faq
     get(id : string, name : string) : Faq | undefined {
-        const data = this.cache(id);
+        const data = this.cache(id, true);
         //if faq doesn't exist
         if (!(name in data)) return;
         //return if exists
@@ -75,7 +77,7 @@ export class FAQS {
     }
     //add faq
     add(id : string, name : string, content : Faq) : boolean {
-        const data = this.cache(id, false);
+        const data = this.cache(id);
         const edit = name in data;
         this.local[id][name] = content;
         return edit;
@@ -96,7 +98,9 @@ async function send(interaction : ChatInputCommandInteraction, message : string,
             await interaction.reply({content:`${message}\n${faq}`});
         }
         else {
-            await interaction.reply({content:`${message}`, embeds:[faq]});
+            const raw = interaction.options.getBoolean('raw', false);
+            if (raw) await interaction.reply({content:`${message}\n\`${JSON.stringify(faq)}\``});
+            else await interaction.reply({content:`${message}`, embeds:[faq]});
         }
     }
     //catch sending errors
@@ -126,7 +130,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
     const tag = interaction.options.getString('faq', true);
     if (interaction.options.getSubcommand() === 'query') {
         const user = interaction.options.getUser('mention', false);
-        const mention = user? `<@${user}>:` : '';
+        const mention = user? `${user}:` : '';
         const faq = FAQ.get(id, tag);
         if (!faq) return;
         send(interaction, mention, faq);

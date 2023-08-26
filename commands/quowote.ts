@@ -1,24 +1,59 @@
 import { APIEmbed, ChatInputCommandInteraction, DMChannel, Guild, GuildMember, SlashCommandBuilder, TextChannel } from 'discord.js';
 
 export const slashcommand = new SlashCommandBuilder()
-.setName('quote')
-.setDescription('Quotes a message')
+.setName('quowote')
+.setDescription('Quowotes a mwessage uwu')
 .addStringOption(option =>
-    option.setName('message')
-    .setDescription('Link to the message to quote')
+    option.setName('mwessage')
+    .setDescription('Link to the message to quowote')
     .setRequired(true))
 .addUserOption(option => option
-    .setName('mention')
-    .setDescription('Mentions a user in the quote'))
+    .setName('mwention')
+    .setDescription('Mwentions a uwuser in da quowote'))
 .addBooleanOption(option => option
-    .setName('raw')
-    .setDescription('Sends the quote embed as raw string'))
+    .setName('raww')
+    .setDescription('Sends teh quowote embwed as raww stwing'))
+
+const owopost = ["",
+    "uwu","owo",">w<","nyaa~","UwU","OwO","~~","uwu~","owo~","UwU~","OwO~",
+    "*nuzzles~","rawr x3","*rubb~","mmmm~","daddy~",
+    "o3o",";)","˶◕‿◕˶","≧◡≦","・ω・","^ω^",">////<",
+];
+
+export function owofy(text : string) {
+    return text
+    //stylize text
+    .replace(/u(?!w)/g,"uw")
+    .replace(/(?<!w|\b)(l|r)(?!w|\b)/g,"w")
+    .replace(/n(?=a|e|i|o|u)/gi,"ny")
+    .replace(/\bthe\b/gi,"da")
+    .replace(/\bthat\b/gi,"dat")
+    .replace(/\bthis\b/gi,"dis")
+    .replace(/\bis\b/gi,"iz")
+    .replace(/\bim\b|\bi'm\b|\bi am\b|bi’m\b/gi,"watashi")
+    .replace(/\bhi\b|\bhello\b|\bsup\b/gi,"moshi moshi")
+    //stuttering function
+    .replace(/\b[a-zA-Z]/g, (s) => { //happens at first letter of each word
+        if (Math.floor(Math.random() * 4) > 0) return s; //1/4 chance to stutter
+        let stutter = s;
+        for (let i = 0; i < Math.floor(Math.random()*3); i++) { //stutters 0-2 times
+            stutter = stutter + "-" + s;
+        }
+        return stutter;
+    })
+    //add random uwu postfixes
+    .replace('\n', (s) => {
+        if (Math.floor(Math.random() * 2) > 0) return s; //1/2 chance to stutter
+        return "  " + owopost[Math.floor(Math.random()*owopost.length)] + s;
+    })
+    + "  " + owopost[Math.floor(Math.random()*owopost.length)];
+}
 
 export async function run(interaction : ChatInputCommandInteraction) {
-    const input = interaction.options.getString('message', true).toLowerCase();
-    const user = interaction.options.getUser('mention', false);
+    const input = interaction.options.getString('mwessage', true).toLowerCase();
+    const user = interaction.options.getUser('mwention', false);
     const mention = user? `${user}` : '';
-    const raw = interaction.options.getBoolean('raw', false);
+    const raw = interaction.options.getBoolean('raww', false);
     //check that link is a discord message
     if (!input.startsWith('https://discord.com/channels/')) {
         interaction.reply({content: `Invalid message link`, ephemeral: true});
@@ -41,7 +76,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
                 name: message.author.username || "Unknown",
                 icon_url: message.author.avatarURL() ?? undefined,
             },
-            description: message.content ?? ' ',
+            description: message.content? owofy(message.content) : ' ',
             footer: {
                 text: dm? '@'+message.author.username : '#'+(channel as TextChannel).name,
                 icon_url: dm? undefined : (guild as Guild).iconURL() ?? undefined

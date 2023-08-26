@@ -3,15 +3,15 @@ import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuild
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('time')
-.setDescription('natural language time to discord timestamp format')
+.setDescription('Converts time to discord timestamp format')
 .addStringOption(option =>
     option.setName('time')
-    .setDescription('the time you want')
+    .setDescription('Time in natural language')
     .setAutocomplete(true)
     .setRequired(true))
 .addStringOption(option =>
     option.setName('format')
-    .setDescription('timestamp display format')
+    .setDescription('Display format')
     .setRequired(false)
     .addChoices(
         {name: 'Relative (default)', value: 'R'},

@@ -2,10 +2,10 @@ import { APIEmbed, ChatInputCommandInteraction, SlashCommandBuilder } from 'disc
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('color')
-.setDescription('Converts colors.')
+.setDescription('Converts color formats')
 .addStringOption(option =>
     option.setName('color')
-    .setDescription('color')
+    .setDescription('Input can be in hex, decimal, binary, rgb(R, G, B), or vec3(R, G, B)')
     .setRequired(true))
 
 type Color = {

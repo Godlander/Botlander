@@ -5,12 +5,12 @@ import fs from 'fs/promises';
 import perms from '../permissions';
 
 export const slashcommand = new SlashCommandBuilder()
-    .setName('admin')
-    .setDescription('controls')
-    .addStringOption(option =>
-        option.setName('command')
-        .setDescription('command')
-        .setRequired(true))
+.setName('admin')
+.setDescription('controls')
+.addStringOption(option =>
+    option.setName('command')
+    .setDescription('command')
+    .setRequired(true))
 
 export async function run(interaction : ChatInputCommandInteraction) {
     if (!perms.owner(interaction)) return;
