@@ -14,10 +14,10 @@ export const slashcommand = new SlashCommandBuilder()
     .setName('raww')
     .setDescription('Sends teh quowote embwed as raww stwing'))
 
-const owopost = ["",
-    "uwu","owo",">w<","nyaa~","UwU","OwO","~~","uwu~","owo~","UwU~","OwO~",
-    "*nuzzles~","rawr x3","*rubb~","mmmm~","daddy~",
-    "o3o",";)","˶◕‿◕˶","≧◡≦","・ω・","^ω^",">////<",
+const owopost = ["","~",
+    "uwu","owo","nyaa~","UwU","OwO","uwu~","owo~","UwU~","OwO~",
+    "\*nuzzles~","rawr x3","*rubb~","mmmm~","daddy~",
+    ">w<","o3o",";)","˶◕‿◕˶","≧◡≦","・ω・","^ω^",">////<",
 ];
 
 export function owofy(text : string) {
