@@ -14,10 +14,12 @@ export async function run (message : Message) {
 
     //look for actions
     for (const action of CreateActions) {
-        if (await action(message)) return;
+        if (await action(message)) {
+            clearInterval(typing);
+            return;
+        }
     }
     //chatbot response
     await chatbot(message);
-
     clearInterval(typing);
 }
