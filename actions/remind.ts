@@ -55,23 +55,29 @@ export async function reset(client : Client) {
     console.log(set, "reminders set");
 }
 
-export async function ondelete(message : Message) {try {
+export async function ondelete(message : Message) {
     //check deleted message is a reminder
     const id = message.id;
     if (!(id in reminders)) return false;
-    //delete the reminder
-    const rem = reminders[id];
-    clearTimeout(sent[id]);
-    delete reminders[id];
-    delete sent[id];
-    save();
-    //edit message
-    const channel = await message.client.channels.fetch(rem.channel);
-    if (channel === null || !("messages" in channel)) throw 0;
-    const reply = await channel.messages.fetch(rem.reply);
-    await reply.edit("Reminder canceled");
-    return true;
-} catch {}}
+    try {
+        //delete the reminder
+        const rem = reminders[id];
+        clearTimeout(sent[id]);
+        delete reminders[id];
+        delete sent[id];
+        save();
+
+        //edit message
+        const channel = await message.client.channels.fetch(rem.channel);
+        if (channel === null || !("messages" in channel)) return false;
+        const reply = await channel.messages.fetch(rem.reply);
+        await reply.edit("Reminder canceled");
+        return true;
+    } catch (e) {
+        console.log(e);
+        return false;
+    }
+}
 
 export async function oncreate(message : Message) {
     //check for remind in message
