@@ -141,7 +141,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
 
         let content : Faq;
         try {content = JSON.parse(input);}
-        catch {content = input;}
+        catch {content = input.replaceAll('\\n','\n');}
 
         if (FAQ.add(id, tag, content)) send(interaction, `Edited faq \`${tag}\` with:`, content);
         else send(interaction, `Added faq \`${tag}\` with:`, content);
