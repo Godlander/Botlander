@@ -58,8 +58,7 @@ export class FAQS {
             catch {this.local[id] = {};}
         }
         //return data
-        data = {...data, ...this.local[id]};
-        return data;
+        return {...data, ...this.local[id]};
     }
     //search for faqs for autocomplete
     search(id : string, name : string, global : boolean = false) : string[] {
@@ -112,14 +111,13 @@ async function send(interaction : ChatInputCommandInteraction, message : string,
 
 export async function autocomplete(interaction : AutocompleteInteraction) {
     const input = interaction.options.getString('faq', true);
+    const subcommand = interaction.options.getSubcommand()
     const id = interaction.guildId ?? undefined;
     if (!id) return;
     let list : string[] = [];
-    if (interaction.options.getSubcommand() === 'query') {
-        list = FAQ.search(id, input, true);
-    }
-    else if (interaction.options.getSubcommand() === 'remove') {
-        list = FAQ.search(id, input, false);
+    switch (subcommand) {
+        case 'query':  list = FAQ.search(id, input, true ); break;
+        case 'remove': list = FAQ.search(id, input, false); break;
     }
     await interaction.respond(list.map(e => ({name:e, value:e})));
 }
