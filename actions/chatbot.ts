@@ -25,7 +25,7 @@ export default async function (message : Message) {
         console.log(reply);
         message.reply({
             content: reply,
-            allowedMentions: {repliedUser:false}
+            allowedMentions:{repliedUser:false}
         }).catch(()=>{return;});
     }).catch(e=>{
         console.log(e);
