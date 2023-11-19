@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { Commands } from '../bot';
 import path from 'path';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import perms from '../permissions';
 
 export const slashcommand = new SlashCommandBuilder()
@@ -12,14 +13,21 @@ export const slashcommand = new SlashCommandBuilder()
     .setDescription('command')
     .setRequired(true))
 
-export async function run(interaction : ChatInputCommandInteraction) {
+function directory(path : null | string) : string {
+    path = path || "./";
+    if (!path.startsWith("./")) path = "./" + path;
+    if (!existsSync(path)) throw "Path does not exist.";
+    return path;
+}
+
+export async function command(interaction : ChatInputCommandInteraction) {
     if (!perms.owner(interaction)) return;
     const command = interaction.options.getString('command', true).toLowerCase().split(' ');
     const ephemeral = command[0].startsWith("pub")? false : true;
     console.log(command);
     try {
         if (command[0].match("shutdown|stop|quit")) {
-            await interaction.reply({content: `shutting down`, ephemeral: ephemeral});
+            await interaction.reply({content: `Shutting down.`, ephemeral: ephemeral});
             process.exit();
         }
         if (command[0].match("reload")) {
@@ -45,8 +53,7 @@ export async function run(interaction : ChatInputCommandInteraction) {
             return;
         }
         if (command[0].match("ls|dir|list")) {
-            let dir = command[1] || "./";
-            if (!dir.startsWith("./")) dir = "./" + dir;
+            let dir = directory(command[1]);
             const stat = await fs.lstat(dir);
             if (stat.isDirectory()) {
                 const files = await fs.readdir(dir);
@@ -64,20 +71,20 @@ export async function run(interaction : ChatInputCommandInteraction) {
                     await interaction.reply({files: [dir], ephemeral: ephemeral});
                 }
             }
+            else throw "Path not found.";
             return;
         }
         if (command[0].match("eval")) {
             command.shift();
-            let s = command.join(' ');
+            const s = command.join(' ');
             let out;
             try {out = eval(s);}
             catch (e) {out = e;}
-            await interaction.reply({content: `${out}`, ephemeral: ephemeral});
+            await interaction.reply({content: `${out}`.slice(0, 2000), ephemeral: ephemeral});
             return;
         }
     }
     catch {(e : any) => {
-        console.log(e);
-        interaction.reply({content: `something went wrong`, ephemeral: ephemeral});
+        interaction.reply({content: JSON.stringify(e).slice(0,2000), ephemeral: ephemeral});
     }}
 }

@@ -4,29 +4,24 @@ import { Commands } from '../bot'
 export const name = Events.InteractionCreate;
 
 export async function run (interaction : Interaction) {
-    if (interaction.isChatInputCommand()) {
-        const command = Commands.get(interaction.commandName);
-        if (!command) {
-            console.error(`No command matching ${interaction.commandName} was found.`);
-            return;
+    try {
+        if (interaction.isChatInputCommand()) {
+            const command = Commands.get(interaction.commandName);
+            if (!command) throw `No slash command ${interaction.commandName} was found.`;
+            await command.command(interaction);
         }
-        try {
-            await command.run(interaction);
-        } catch (error) {
-            console.error(`Error executing ${interaction.commandName}`);
-            console.error(error);
+        else if (interaction.isAutocomplete()) {
+            const command = Commands.get(interaction.commandName);
+            if (!command) throw `No autocomplete ${interaction.commandName} was found.`;
+            await command.autocomplete(interaction);
+        }
+        else if (interaction.isContextMenuCommand()) {
+            const command = Commands.get(interaction.commandName);
+            if (!command) throw `No context menu ${interaction.commandName} was found.`;
+            await command.contextmenu(interaction);
         }
     }
-    else if (interaction.isAutocomplete()) {
-        const command = Commands.get(interaction.commandName);
-        if (!command) {
-            console.error(`No command matching ${interaction.commandName} was found.`);
-            return;
-        }
-        try {
-            await command.autocomplete(interaction);
-        } catch (error) {
-            console.error(error);
-        }
+    catch (error) {
+        console.log(error);
     }
 }

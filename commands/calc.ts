@@ -9,7 +9,7 @@ export const slashcommand = new SlashCommandBuilder()
     .setDescription('The expression to calculate')
     .setRequired(true))
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     const input = interaction.options.getString('expression', true);
     try {
         interaction.reply({

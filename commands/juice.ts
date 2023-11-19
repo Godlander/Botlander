@@ -4,7 +4,7 @@ export const slashcommand = new SlashCommandBuilder()
 .setName('juice')
 .setDescription('🧃')
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     interaction.reply({content:'https://imgur.com/a/o41g3LN', fetchReply: true})
     .then(message => message.react('🧃'));
 }

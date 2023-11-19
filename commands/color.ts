@@ -107,7 +107,7 @@ export function parse(input : string) : APIEmbed {
                         '`bin '+bin+'`'};
 }
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     const input = interaction.options.getString('color', true).toLowerCase();
     let out;
     try {

@@ -122,7 +122,7 @@ export async function autocomplete(interaction : AutocompleteInteraction) {
     await interaction.respond(list.map(e => ({name:e, value:e})));
 }
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     const id = interaction.guildId ?? undefined;
     if (!id) return;
     const tag = interaction.options.getString('faq', true);

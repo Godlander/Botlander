@@ -6,29 +6,41 @@ const regx = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
 
 export default async function (message : Message) {
     if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
-    const input = message.content.replace(regx, " ").replace(/'|"/gi, "\$&").replace(/ +/gi, " ")
+    const four = message.content.includes('👀');
+    const text = message.content.replace(regx, " ").replace(/'|"/gi, "\$&").replace(/ +/gi, " ")
                                 .normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
-    console.log("\nInput: " + input);
-    await fetch('https://api.openai.com/v1/chat/completions', {
+    let content : any = [{type: "text", text: text}];
+    let vision = false;
+    if (four && message.attachments.size > 0) {
+        const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
+        if (img != null && (img.height || 0) < 1024 && (img.width || 0) < 1024) {
+            content.push({type: "image_url", image_url: img.url});
+            vision = true;
+        }
+    }
+    if (four) console.log("\nInput: " + text + "\nFour: " + four + ", Vision: " + vision);
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: "POST",
         headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
         body: JSON.stringify({
-                model:"gpt-3.5-turbo",
+                model: four? (vision? "gpt-4-vision-preview":"gpt-4-1106-preview"):"gpt-3.5-turbo",
                 max_tokens: 500,
-                messages:[{role: "user", content: input}]
+                messages:[{role: "user", content: content}]
             })
-    })
-    .then(response => response.json())
-    .then(data => {
-        let reply = data.choices[0]?.message?.content || '<@225455864876761088> plz help';
-        reply = reply.slice(0, 2000);
-        console.log(reply);
-        message.reply({
-            content: reply,
-            allowedMentions:{repliedUser:false}
-        }).catch(()=>{return;});
-    }).catch(e=>{
-        console.log(e);
-        message.channel.send('<@225455864876761088> plz help');
     });
+    const data = await res.json();
+        let reply;
+        try {
+            reply = data.choices[0].message.content.slice(0, 2000);
+            message.reply({
+                content: reply,
+                allowedMentions:{repliedUser:false}
+            });
+            console.log(reply);
+        }
+        catch (e) {
+            console.log(e);
+            message.channel.send('<@225455864876761088> plz help');
+        }
 }

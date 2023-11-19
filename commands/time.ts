@@ -48,7 +48,7 @@ export async function autocomplete(interaction : AutocompleteInteraction) {
     interaction.respond([{name:`<t:${timestamp}:${format}>`,value:`<t:${timestamp}:${format}>`}])
 }
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     const input = interaction.options.getString('time', true).toLowerCase();
     const format = interaction.options.getString('format', false) ?? 'R';
     //if already timestamp just spit it back

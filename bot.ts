@@ -59,12 +59,21 @@ const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 for (const file of commandFiles) {
     const command = require(path.join(commandsPath, file));
-    if ('slashcommand' in command && 'run' in command) {
+    let load = false;
+    if ('slashcommand' in command && 'command' in command) {
         Commands.set(command.slashcommand.name, command);
         setcommands.push(command.slashcommand.toJSON());
-        console.log(`/${file} loaded`)
-    } else {
-        console.log(`/${file} couldn't load`);
+        console.log(`/${file} loaded`);
+        load = true;
+    }
+    if ('contextmenucommand' in command && 'contextmenu' in command) {
+        Commands.set(command.slashcommand.name, command);
+        setcommands.push(command.contextmenucommand.toJSON());
+        console.log(`>${file} loaded`);
+        load = true;
+    }
+    if (!load) {
+        console.log(`${file} couldn't load`);
     }
 }
 

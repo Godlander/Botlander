@@ -1,4 +1,5 @@
-import { APIEmbed, ChatInputCommandInteraction, DMChannel, Guild, GuildMember, SlashCommandBuilder, TextChannel } from 'discord.js';
+import { APIEmbed, ApplicationCommandType, ChatInputCommandInteraction, ContextMenuCommandBuilder, Guild, GuildMember, Message, MessageContextMenuCommandInteraction, SlashCommandBuilder, TextChannel } from 'discord.js';
+import { getmessage } from '../lib';
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('quote')
@@ -14,7 +15,63 @@ export const slashcommand = new SlashCommandBuilder()
     .setName('raw')
     .setDescription('Sends the quote embed as raw string'))
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export const contextmenucommand = new ContextMenuCommandBuilder()
+.setName('quote')
+.setType(ApplicationCommandType.Message)
+
+export async function quote(message : Message, filter : ((a : string) => string) | null = null) : Promise<APIEmbed> {
+    //try to get the author of the message
+    let member;
+    try {
+        if (message.channel.isDMBased()) member = message.channel.recipient;
+        else member = await message.guild?.members.fetch(message.author);
+    }
+    catch {member = null;}
+
+    let text = message.content ?? ' ';
+    //run filter function on text if provided
+    if (filter != null) text = filter(text);
+
+    //generate embed
+    const embed : APIEmbed = {
+        color: member? (member as GuildMember).displayColor || 3553599 : 3553599,
+        author: {
+            name: message.author.username ?? "Unknown",
+            icon_url: message.author.avatarURL() ?? undefined,
+        },
+        description: text,
+        footer: {
+            text: message.channel.isDMBased()? '@'+message.author.username : '#'+(message.channel as TextChannel).name,
+            icon_url: message.channel.isDMBased()? undefined : (message.guild as Guild).iconURL() ?? undefined
+        },
+        timestamp: message.createdAt.toISOString()
+    };
+    //add image attachment if exists
+    if (message.attachments.size > 0) {
+        let img = message.attachments.find(a => a?.contentType?.startsWith("image"));
+        if (img != null) embed.image = {url:img.url};
+    }
+    return embed;
+}
+
+export async function contextmenu(interaction : MessageContextMenuCommandInteraction) {
+    const message = interaction.targetMessage;
+    const guildid = message.guild? message.guild.id : '@me';
+    const channelid = message.channel.id;
+    const messageid = message.id;
+    const link = 'https://discord.com/channels/' + guildid + '/' + channelid + '/' + messageid;
+    try {
+        const embed = await quote(message);
+        interaction.reply({content: link, embeds:[embed]});
+    }
+    catch (e) {
+        interaction.reply({content: `Invalid message link`, ephemeral: true});
+        console.log(e);
+        return;
+    }
+}
+
+export async function command(interaction : ChatInputCommandInteraction) {
     const input = interaction.options.getString('message', true).toLowerCase();
     const user = interaction.options.getUser('mention', false);
     const mention = user? `${user}` : '';
@@ -24,34 +81,11 @@ export async function run(interaction : ChatInputCommandInteraction) {
         interaction.reply({content: `Invalid message link`, ephemeral: true});
         return;
     }
-    const id = input.split('/').splice(4,3);
+    const ids = input.split('/').splice(4,3);
     try {
-        const dm = id[0] === "@me";
-        const guild = dm? null : await interaction.client.guilds.fetch(id[0]);
-        const channel = guild? await guild.channels.fetch(id[1]) : await interaction.client.channels.fetch(id[1]);
-        if (channel === null || !("messages" in channel)) throw 0;
-        const message = await channel.messages.fetch(id[2]);
+        const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
+        const embed = await quote(message);
 
-        let member;
-        try {dm? (channel as DMChannel).recipient : await (guild as Guild).members.fetch(message.author);}
-        catch {member = null;}
-        const embed : APIEmbed = {
-            color: member? (member as GuildMember).displayColor || 3553599 : 3553599,
-            author: {
-                name: message.author.username || "Unknown",
-                icon_url: message.author.avatarURL() ?? undefined,
-            },
-            description: message.content ?? ' ',
-            footer: {
-                text: dm? '@'+message.author.username : '#'+(channel as TextChannel).name,
-                icon_url: dm? undefined : (guild as Guild).iconURL() ?? undefined
-            },
-            timestamp: message.createdAt.toISOString()
-        };
-        if (message.attachments.size > 0) {
-            let img = message.attachments.find(a => a?.contentType?.startsWith("image"));
-            if (img != null) embed.image = {url:img.url};
-        }
         if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');
         else interaction.reply({content: mention + ' ' + input, embeds:[embed]});
     }

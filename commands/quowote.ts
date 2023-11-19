@@ -1,4 +1,6 @@
 import { APIEmbed, ChatInputCommandInteraction, DMChannel, Guild, GuildMember, SlashCommandBuilder, TextChannel } from 'discord.js';
+import { getmessage } from '../lib';
+import { quote } from './quote'
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('quowote')
@@ -20,7 +22,7 @@ const owopost = ["","~",
     ">w<","o3o",";)","˶◕‿◕˶","≧◡≦","・ω・","^ω^",">////<",
 ];
 
-export function owofy(text : string) {
+export function owofy(text : string) : string {
     return text
     //stylize text
     .replace(/u(?!w)/g,"uw")
@@ -49,7 +51,7 @@ export function owofy(text : string) {
     + "  " + owopost[Math.floor(Math.random()*owopost.length)]; //postfix at the end
 }
 
-export async function run(interaction : ChatInputCommandInteraction) {
+export async function command(interaction : ChatInputCommandInteraction) {
     const input = interaction.options.getString('mwessage', true).toLowerCase();
     const user = interaction.options.getUser('mwention', false);
     const mention = user? `${user}` : '';
@@ -59,34 +61,11 @@ export async function run(interaction : ChatInputCommandInteraction) {
         interaction.reply({content: `Invalid message link`, ephemeral: true});
         return;
     }
-    const id = input.split('/').splice(4,3);
+    const ids = input.split('/').splice(4,3);
     try {
-        const dm = id[0] === "@me";
-        const guild = dm? null : await interaction.client.guilds.fetch(id[0]);
-        const channel = guild? await guild.channels.fetch(id[1]) : await interaction.client.channels.fetch(id[1]);
-        if (channel === null || !("messages" in channel)) throw 0;
-        const message = await channel.messages.fetch(id[2]);
+        const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
+        const embed = await quote(message, owofy);
 
-        let member;
-        try {dm? (channel as DMChannel).recipient : await (guild as Guild).members.fetch(message.author);}
-        catch {member = null;}
-        const embed : APIEmbed = {
-            color: member? (member as GuildMember).displayColor || 3553599 : 3553599,
-            author: {
-                name: message.author.username || "Unknown",
-                icon_url: message.author.avatarURL() ?? undefined,
-            },
-            description: message.content? owofy(message.content) : ' ',
-            footer: {
-                text: dm? '@'+message.author.username : '#'+(channel as TextChannel).name,
-                icon_url: dm? undefined : (guild as Guild).iconURL() ?? undefined
-            },
-            timestamp: message.createdAt.toISOString()
-        };
-        if (message.attachments.size > 0) {
-            let img = message.attachments.find(a => a?.contentType?.startsWith("image"));
-            if (img != null) embed.image = {url:img.url};
-        }
         if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');
         else interaction.reply({content: mention + ' ' + input, embeds:[embed]});
     }
