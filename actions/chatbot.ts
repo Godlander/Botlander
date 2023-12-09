@@ -3,6 +3,7 @@ import { clientid, openaikey } from '../config.json';
 import whitelist from '../data/chat/whitelist.json';
 
 const regx = new RegExp(`(botlander|<@!?${clientid}>)`, 'i');
+var defaults = ["No comment.", "💩", "lol.", "...", "hmm.", "Hmmm.", "mhm.", "Mhm.", "yes.", "no.", "You're probably right.", "Yes?", "Sorry, I'm busy right now.", "Don't you have something better to do?", "Uh huh.", "Yeah sure.", "Okay.", "ok", "Sure.", "Hi.", "Go bother someone else.", "Glad to hear that.\nor sorry that happened."];
 
 export default async function (message : Message) {
     if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
@@ -33,6 +34,7 @@ export default async function (message : Message) {
         let reply;
         try {
             reply = data.choices[0].message.content.slice(0, 2000);
+            if (reply.trim().length < 1) reply = defaults[Math.floor(Math.random()*defaults.length)];
             message.reply({
                 content: reply,
                 allowedMentions:{repliedUser:false}

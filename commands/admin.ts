@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import perms from '../permissions';
+import { errorreply } from '../lib';
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('admin')
@@ -16,7 +17,7 @@ export const slashcommand = new SlashCommandBuilder()
 function directory(path : null | string) : string {
     path = path || "./";
     if (!path.startsWith("./")) path = "./" + path;
-    if (!existsSync(path)) throw "Path does not exist.";
+    if (!existsSync(path)) throw path + " not found";
     return path;
 }
 
@@ -32,24 +33,36 @@ export async function command(interaction : ChatInputCommandInteraction) {
         }
         if (command[0].match("reload")) {
             const cmd = Commands.get(command[1]);
-            delete require.cache[require.resolve(`./${cmd.data.name}.js`)];
+            console.log(cmd);
+            if (!cmd) throw command[1] + " not found";
+            delete require.cache[require.resolve(`./${cmd.slashcommand.name}.ts`)];
             try {
-                Commands.delete(cmd.data.name);
-                const newCommand = require(`./${cmd.data.name}.js`);
-                Commands.set(newCommand.data.name, newCommand);
-                await interaction.reply({content: `\`${newCommand.data.name}\` reloaded`, ephemeral: ephemeral});
+                Commands.delete(cmd.slashcommand.name);
+                const newCommand = require(`./${cmd.slashcommand.name}.ts`);
+                Commands.set(newCommand.slashcommand.name, newCommand);
+                await interaction.reply({content: `\`${newCommand.slashcommand.name}\` reloaded`, ephemeral: ephemeral});
             } catch (e) {
                 console.error(e);
-                await interaction.reply({content: `\`/${cmd.data.name}\` couldn't load:\`\`\`\n${e}\n\`\`\``, ephemeral: ephemeral});
+                await interaction.reply({content: `\`/${cmd.slashcommand.name}\` couldn't load:\`\`\`\n${e}\n\`\`\``, ephemeral: ephemeral});
             }
             return;
         }
         if (command[0].match("whitelist")) {
             let whitelist = require("../data/chat/whitelist.json");
-            let guild = await interaction.client.guilds.fetch(command[1]);
-            whitelist.guilds.push(command[1]);
+            let name = null;
+            if (command[1].match("guild|server")) {
+                const guild = await interaction.client.guilds.fetch(command[2]);
+                name = guild.name;
+                whitelist.guilds.push(command[2]);
+            }
+            else if (command[1].match("user")) {
+                const user = await interaction.client.users.fetch(command[2]);
+                name = user.username;
+                whitelist.users.push(command[2]);
+            }
+            if (!name) throw command[1] + " not found";
             await fs.writeFile(__dirname + "/../data/chat/whitelist.json", JSON.stringify(whitelist));
-            await interaction.reply({content: `added ${guild.name}`, ephemeral: ephemeral});
+            await interaction.reply({content: `added ${name}`, ephemeral: ephemeral});
             return;
         }
         if (command[0].match("ls|dir|list")) {
@@ -71,20 +84,20 @@ export async function command(interaction : ChatInputCommandInteraction) {
                     await interaction.reply({files: [dir], ephemeral: ephemeral});
                 }
             }
-            else throw "Path not found.";
+            else throw command[1] + " not found";
             return;
         }
         if (command[0].match("eval")) {
             command.shift();
             const s = command.join(' ');
             let out;
-            try {out = eval(s);}
-            catch (e) {out = e;}
+            out = eval(s);
             await interaction.reply({content: `${out}`.slice(0, 2000), ephemeral: ephemeral});
             return;
         }
     }
-    catch {(e : any) => {
-        interaction.reply({content: JSON.stringify(e).slice(0,2000), ephemeral: ephemeral});
-    }}
+    catch (e) {
+        console.log(e);
+        errorreply(interaction, e, true);
+    }
 }

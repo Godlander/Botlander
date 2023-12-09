@@ -11,8 +11,3 @@ describe('test color command', () => {
         })
     })
 })
-
-import { getchardata } from './commands/go';
-describe('test go command', () => {
-
-})
