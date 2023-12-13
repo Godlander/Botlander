@@ -119,7 +119,7 @@ export async function autocomplete(interaction : AutocompleteInteraction) {
         case 'query':  list = FAQ.search(id, input, true ); break;
         case 'remove': list = FAQ.search(id, input, false); break;
     }
-    await interaction.respond(list.map(e => ({name:e, value:e})));
+    await interaction.respond(list.slice(0,25).map(e => ({name:e, value:e})));
 }
 
 export async function command(interaction : ChatInputCommandInteraction) {
