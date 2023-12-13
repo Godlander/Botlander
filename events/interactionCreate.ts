@@ -1,5 +1,6 @@
 import { Events, Interaction } from 'discord.js';
 import { Commands } from '../bot'
+import { errorreply } from '../lib';
 
 export const name = Events.InteractionCreate;
 
@@ -21,7 +22,8 @@ export async function run (interaction : Interaction) {
             await command.contextmenu(interaction);
         }
     }
-    catch (error) {
-        console.log(error);
+    catch (e) {
+        console.log(e);
+        await errorreply(interaction, e);
     }
 }

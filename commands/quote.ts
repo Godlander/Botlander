@@ -60,15 +60,8 @@ export async function contextmenu(interaction : MessageContextMenuCommandInterac
     const channelid = message.channel.id;
     const messageid = message.id;
     const link = 'https://discord.com/channels/' + guildid + '/' + channelid + '/' + messageid;
-    try {
-        const embed = await quote(message);
-        interaction.reply({content: link, embeds:[embed]});
-    }
-    catch (e) {
-        interaction.reply({content: `Invalid message link`, ephemeral: true});
-        console.log(e);
-        return;
-    }
+    const embed = await quote(message);
+    interaction.reply({content: link, embeds:[embed]});
 }
 
 export async function command(interaction : ChatInputCommandInteraction) {
@@ -77,21 +70,12 @@ export async function command(interaction : ChatInputCommandInteraction) {
     const mention = user? `${user}` : '';
     const raw = interaction.options.getBoolean('raw', false);
     //check that link is a discord message
-    if (!input.startsWith('https://discord.com/channels/')) {
-        interaction.reply({content: `Invalid message link`, ephemeral: true});
-        return;
-    }
+    if (!input.startsWith('https://discord.com/channels/')) throw 'Invalid message link';
     const ids = input.split('/').splice(4,3);
-    try {
-        const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
-        const embed = await quote(message);
+    if (ids.length < 3) throw 'Invalid message link';
+    const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
+    const embed = await quote(message);
 
-        if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');
-        else interaction.reply({content: mention + ' ' + input, embeds:[embed]});
-    }
-    catch (e) {
-        interaction.reply({content: `Invalid message link`, ephemeral: true});
-        console.log(e);
-        return;
-    }
+    if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');
+    else interaction.reply({content: mention + ' ' + input, embeds:[embed]});
 }

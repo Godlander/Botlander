@@ -12,11 +12,14 @@ export default async function (message : Message) {
                                 .normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
     let content : any = [{type: "text", text: text}];
     let vision = false;
-    if (four && message.attachments.size > 0) {
-        const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
-        if (img != null && (img.height || 0) < 1024 && (img.width || 0) < 1024) {
-            content.push({type: "image_url", image_url: img.url});
-            vision = true;
+    if (four) {
+        message.content.replace('👀','');
+        if (message.attachments.size > 0) { //if image attachment
+            const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
+            if (img != null && (img.height || 0) < 1024 && (img.width || 0) < 1024) {
+                content.push({type: "image_url", image_url: img.url});
+                vision = true;
+            }
         }
     }
     console.log("\nInput: " + text + "\nFour: " + four + ", Vision: " + vision);
@@ -39,6 +42,7 @@ export default async function (message : Message) {
             content: reply,
             allowedMentions:{repliedUser:false}
         });
+        console.log("Output: " + reply);
     }
     catch (e) {
         console.log(e);

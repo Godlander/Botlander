@@ -103,15 +103,15 @@ async function send(interaction : ChatInputCommandInteraction, message : string,
         }
     }
     //catch sending errors
-    catch (error : any) {
-        if ('rawError' in error) error = error.rawError;
-        interaction.reply({content:JSON.stringify(error).substring(0,1999), ephemeral:true});
+    catch (e : any) {
+        if ('rawError' in e) e = e.rawerror;
+        interaction.reply({content:JSON.stringify(e).substring(0,1999), ephemeral:true});
     }
 }
 
 export async function autocomplete(interaction : AutocompleteInteraction) {
     const input = interaction.options.getString('faq', true);
-    const subcommand = interaction.options.getSubcommand()
+    const subcommand = interaction.options.getSubcommand();
     const id = interaction.guildId ?? undefined;
     if (!id) return;
     let list : string[] = [];
@@ -135,7 +135,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
     }
     else if (interaction.options.getSubcommand() === 'add') {
         if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
-        const input = interaction.options.getString('content', true)
+        const input = interaction.options.getString('content', true);
 
         let content : Faq;
         try {content = JSON.parse(input);}

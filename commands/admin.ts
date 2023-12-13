@@ -98,6 +98,6 @@ export async function command(interaction : ChatInputCommandInteraction) {
     }
     catch (e) {
         console.log(e);
-        errorreply(interaction, e, true);
+        errorreply(interaction, e, ephemeral);
     }
 }

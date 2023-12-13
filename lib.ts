@@ -1,4 +1,8 @@
-import { BaseInteraction, Channel, ChatInputCommandInteraction, Guild } from "discord.js";
+import { BaseInteraction, ChatInputCommandInteraction, Interaction } from "discord.js";
+
+export function isstring(s : unknown) : Boolean {
+    return typeof s === 'string';
+}
 
 //fetches a message from string guild, channel, and message ids
 export async function getmessage(interaction : BaseInteraction, guildid : string, channelid : string, messageid : string) {
@@ -9,6 +13,11 @@ export async function getmessage(interaction : BaseInteraction, guildid : string
     return message;
 }
 
-export async function errorreply(interaction : ChatInputCommandInteraction, e : any, ephemeral : boolean) {
-    interaction.reply({content: JSON.stringify(e, Object.getOwnPropertyNames(e)).slice(0,2000), ephemeral: ephemeral});
+export async function errorreply(interaction : Interaction, e : any, ephemeral : boolean = true) {
+    if (!interaction.isCommand()) return;
+    if (!isstring(e)) {
+        if ('rawError' in e) e = e.rawError;
+        e = '```json\n' + JSON.stringify(e, Object.getOwnPropertyNames(e)) + '```';
+    }
+    interaction.reply({content: e.slice(0,2000), ephemeral: ephemeral});
 }
