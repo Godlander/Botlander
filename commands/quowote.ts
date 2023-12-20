@@ -63,7 +63,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
     }
     const ids = input.split('/').splice(4,3);
     try {
-        const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
+        const message = await getmessage(interaction, ids[1], ids[2]);
         const embed = await quote(message, owofy);
 
         if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');

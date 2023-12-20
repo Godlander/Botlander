@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import perms from '../permissions';
-import { errorreply } from '../lib';
+import * as lib from '../lib';
 
 export const slashcommand = new SlashCommandBuilder()
 .setName('admin')
@@ -90,14 +90,13 @@ export async function command(interaction : ChatInputCommandInteraction) {
         if (command[0].match("eval")) {
             command.shift();
             const s = command.join(' ');
-            let out;
-            out = eval(s);
-            await interaction.reply({content: `${out}`.slice(0, 2000), ephemeral: ephemeral});
+            const out = await (eval(`async (i) => {try{`+s+`}catch(e){return e;}}`)(interaction));
+            await interaction.reply({content: `\`\`\`\n${out}\n\`\`\``.slice(0, 2000), ephemeral: ephemeral});
             return;
         }
     }
     catch (e) {
         console.log(e);
-        errorreply(interaction, e, ephemeral);
+        lib.errorreply(interaction, e, ephemeral);
     }
 }

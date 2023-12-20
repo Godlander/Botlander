@@ -73,7 +73,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
     if (!input.startsWith('https://discord.com/channels/')) throw 'Invalid message link';
     const ids = input.split('/').splice(4,3);
     if (ids.length < 3) throw 'Invalid message link';
-    const message = await getmessage(interaction, ids[0], ids[1], ids[2]);
+    const message = await getmessage(interaction, ids[1], ids[2]);
     const embed = await quote(message);
 
     if (raw) interaction.reply('`'+JSON.stringify(embed)+'`');
