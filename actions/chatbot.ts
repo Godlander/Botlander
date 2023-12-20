@@ -16,8 +16,8 @@ export default async function (message : Message) {
         message.content.replace('👀','');
         if (message.attachments.size > 0) { //if image attachment
             const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
-            if (img != null && (img.height || 0) < 1024 && (img.width || 0) < 1024) {
-                content.push({type: "image_url", image_url: img.url});
+            if (img != null) {
+                content.push({type: "image_url", image_url: img.url+'width=512&height=512'});
                 vision = true;
             }
         }

@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Message, PermissionsBitField } from 'discord.js'
 import { ownerid, clientid } from './config.json';
 
-export const isbotlander = new RegExp(`((?<![\\\/])botlander(?![\\\/])|<@!?${clientid}>)`, 'i');
+export const isbotlander = /((^|[^\w/\\><()[\];])botlander($|[^\w/\\><()[\];]))|<@!?${clientid}>/i;
 
 export default {
     //true if interaction author has permissions
