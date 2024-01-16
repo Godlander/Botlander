@@ -22,7 +22,7 @@ export const slashcommand = new SlashCommandBuilder()
     ));
 
 export function gettime(input : string, forward : boolean = true) {
-    const gettime = chrono.parse(input, new Date(), {forwardDate:true});
+    const gettime = chrono.parse(input, new Date(), {forwardDate:forward});
     if (gettime.length === 0) return;
     return gettime[0].start.date().getTime();
 }
@@ -49,7 +49,7 @@ export async function autocomplete(interaction : AutocompleteInteraction) {
 }
 
 export async function command(interaction : ChatInputCommandInteraction) {
-    const input = interaction.options.getString('time', true).toLowerCase();
+    const input = interaction.options.getString('time', true);
     const format = interaction.options.getString('format', false) ?? 'R';
     //if already timestamp just spit it back
     const reg = input.match(/<t:\d+:[TDFR]>/gi);
@@ -60,7 +60,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
     //get timestamp
     const timestamp = gettimestamp(input);
     let out = `<t:${timestamp}:${format}> \`<t:${timestamp}:${format}>\``;
-    //if no formatting just get number
+    //if no formatting just get the number
     if (format === 'N') out = ''+timestamp;
     interaction.reply(out);
 }
