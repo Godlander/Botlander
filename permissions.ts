@@ -1,11 +1,16 @@
-import { ChatInputCommandInteraction, Message, PermissionsBitField } from 'discord.js'
+import { ChatInputCommandInteraction, Message, PermissionsBitField, PermissionFlagsBits, GuildChannel} from 'discord.js'
 import { ownerid, clientid } from './config.json';
 
-export const isbotlander = /((^|[^\w/\\><()[\];])botlander($|[^\w/\\><()[\];]))|<@!?${clientid}>/i;
+export const isbotlander = new RegExp(`((^|[^\\w/\\\\><()[\\];])botlander($|[^\\w/\\\\><()[\\];]))|<@!?${clientid}>`,"gi");
 
 export default {
+    //true if bot has permission
+    self(channel: GuildChannel, arr : bigint[]) {
+        return (channel.guild.members.me?.permissions.has(arr));
+    },
+
     //true if interaction author has permissions
-    has(interaction : ChatInputCommandInteraction, arr : PermissionsBitField) {
+    has(interaction : ChatInputCommandInteraction, arr : bigint[]) {
         if ((interaction.member?.permissions as PermissionsBitField).has(arr)) return true;
         interaction.reply({content: `You do not have permission to use this command.`, ephemeral: true});
         return false;
@@ -13,7 +18,7 @@ export default {
 
     //true if interaction author is owner
     owner(interaction : ChatInputCommandInteraction) {
-        if (interaction.user?.id === ownerid) return true;
+        if (interaction.user.id === ownerid) return true;
         interaction.reply({content: `You do not have permission to use this command.`, ephemeral: true});
         return false;
     },

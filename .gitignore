@@ -2,3 +2,4 @@ config.json
 desktop.ini
 node_modules/*
 data/*
+.stignore

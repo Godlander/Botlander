@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Client, Collection, GatewayIntentBits, Partials, REST, Routes } from 'discord.js';
+import { Client, Collection, GatewayIntentBits, Message, Partials, REST, Routes} from 'discord.js';
 import { clientid, token } from './config.json';
 
 const client = new Client({
@@ -19,8 +19,8 @@ const client = new Client({
 });
 
 //collect actions
-export const CreateActions: any[] = [];
-export const DeleteActions: any[] = [];
+export const CreateActions: {(message : Message) : Promise<boolean>}[] = [];
+export const DeleteActions: {(message : Message) : Promise<boolean>}[] = [];
 const actionPath = path.join(__dirname, 'actions');
 const actionFiles = fs.readdirSync(actionPath).filter(file => file.endsWith('.ts'));
 for (const file of actionFiles) {

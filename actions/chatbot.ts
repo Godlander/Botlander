@@ -22,7 +22,10 @@ export default async function (message : Message) {
             }
         }
     }
-    console.log("\nInput: " + text + "\nFour: " + four + ", Vision: " + vision);
+    let origin = message.author.username + " In: ";
+    if (message.channel.isDMBased()) origin += "dm";
+    else origin += message.guild?.name + " " + message.guild?.id;
+    console.log("\nFrom: " + origin + "\nInput: " + text + "\nFour: " + four + ", Vision: " + vision);
 
     let reply;
     try {

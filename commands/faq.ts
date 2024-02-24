@@ -134,7 +134,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
         send(interaction, mention, faq);
     }
     else if (interaction.options.getSubcommand() === 'add') {
-        if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
+        if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
         const input = interaction.options.getString('content', true);
 
         let content : Faq;
@@ -146,7 +146,7 @@ export async function command(interaction : ChatInputCommandInteraction) {
         fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(FAQ.local[id]));
     }
     else if (interaction.options.getSubcommand() === 'remove') {
-        if (!perms.has(interaction, new PermissionsBitField([PermissionFlagsBits.ManageMessages]))) return;
+        if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
         if (FAQ.remove(id, tag)) interaction.reply({content: `Removed faq \`${tag}\``});
         else interaction.reply({content: `No faq \`${tag}\``, ephemeral: true});
         fs.writeFileSync(path.join(__dirname,'../','data','faq',id+'.json'), JSON.stringify(FAQ.local[id]));
