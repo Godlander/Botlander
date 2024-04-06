@@ -5,6 +5,23 @@ import whitelist from '../data/chat/whitelist.json';
 
 var defaults = ["<@225455864876761088> plz help", "No comment.", "💩", "lol.", "...", "hmm.", "Hmmm.", "mhm.", "Mhm.", "yes.", "no.", "You're probably right.", "Yes?", "Sorry, I'm busy right now.", "Don't you have something better to do?", "Uh huh.", "Yeah sure.", "Okay.", "ok", "Sure.", "Hi.", "Go bother someone else.", "Glad to hear that.\nor sorry that happened."];
 
+export async function chat(input : string, four = false, vision = false) : Promise<string> {
+    let reply;
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: "POST",
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
+        body: JSON.stringify({
+                model: four? (vision? "gpt-4-vision-preview":"gpt-4-1106-preview"):"gpt-3.5-turbo",
+                max_tokens: 500,
+                messages:[{role: "user", content: input}]
+            })
+    });
+    const data = await res.json();
+    reply = data.choices;
+    if (reply) return reply[0].message.content;
+    else throw data;
+}
+
 export default async function (message : Message) {
     if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
     const four = message.content.includes('👀');
@@ -29,17 +46,7 @@ export default async function (message : Message) {
 
     let reply;
     try {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: "POST",
-            headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
-            body: JSON.stringify({
-                    model: four? (vision? "gpt-4-vision-preview":"gpt-4-1106-preview"):"gpt-3.5-turbo",
-                    max_tokens: 500,
-                    messages:[{role: "user", content: content}]
-                })
-        });
-        const data = await res.json();
-        reply = data.choices[0].message.content.slice(0, 2000);
+        let reply = await chat(content, four, vision);
         if (reply.trim().length < 1) throw "empty message";
         message.reply({
             content: reply,
@@ -49,7 +56,7 @@ export default async function (message : Message) {
     }
     catch (e) {
         console.log(e);
-        reply = defaults[Math.floor(Math.random()*defaults.length)]
+        //reply = defaults[Math.floor(Math.random()*defaults.length)]
         message.channel.send('<@225455864876761088> plz help');
     }
 }

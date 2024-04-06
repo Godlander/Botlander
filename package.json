@@ -2,17 +2,6 @@
     "dependencies": {
         "chrono-node": "^2.6.3",
         "discord.js": "^14.11.0",
-        "mathjs": "^11.12.0",
-        "ts-jest": "^29.1.1"
-    },
-    "scripts": {
-        "test": "jest",
-        "start": "npx ts-node bot.ts"
-    },
-    "devDependencies": {
-        "@babel/preset-env": "^7.22.10",
-        "@babel/preset-typescript": "^7.22.5",
-        "@jest/globals": "^29.6.2",
-        "@types/jest": "^29.5.3"
+        "mathjs": "^11.12.0"
     }
 }

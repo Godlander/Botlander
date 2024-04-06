@@ -3,3 +3,5 @@ desktop.ini
 node_modules/*
 data/*
 .stignore
+bun.lockb
+*test.ts
