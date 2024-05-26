@@ -5,14 +5,14 @@ import whitelist from '../data/chat/whitelist.json';
 
 var defaults = ["<@225455864876761088> plz help", "No comment.", "💩", "lol.", "...", "hmm.", "Hmmm.", "mhm.", "Mhm.", "yes.", "no.", "You're probably right.", "Yes?", "Sorry, I'm busy right now.", "Don't you have something better to do?", "Uh huh.", "Yeah sure.", "Okay.", "ok", "Sure.", "Hi.", "Go bother someone else.", "Glad to hear that.\nor sorry that happened."];
 
-export async function chat(input : string, four = false, vision = false) : Promise<string> {
+export async function chat(input : string, vision = false) : Promise<string> {
     let reply;
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: "POST",
         headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
         body: JSON.stringify({
-                model: four? (vision? "gpt-4-vision-preview":"gpt-4-1106-preview"):"gpt-3.5-turbo",
-                max_tokens: 500,
+                model: "gpt-4o",
+                max_tokens: 400,
                 messages:[{role: "user", content: input}]
             })
     });
@@ -24,30 +24,29 @@ export async function chat(input : string, four = false, vision = false) : Promi
 
 export default async function (message : Message) {
     if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
-    const four = message.content.includes('👀');
     const text = message.content.replace(isbotlander, " ").replace(/'|"/gi, "\$&").replace(/ +/gi, " ")
                                 .normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
     let content : any = [{type: "text", text: text}];
-    let vision = false;
-    if (four) {
+    const vision = message.content.includes('👀');
+    if (vision) {
         message.content.replace('👀','');
         if (message.attachments.size > 0) { //if image attachment
             const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
             if (img != null) {
-                content.push({type: "image_url", image_url: img.url+'width=512&height=512'});
-                vision = true;
+                content.push({type: "image_url", image_url: {url: img.url+'width=512&height=512'}});
             }
         }
     }
     let origin = message.author.username + " In: ";
     if (message.channel.isDMBased()) origin += "dm";
     else origin += message.guild?.name + " " + message.guild?.id;
-    console.log("\nFrom: " + origin + "\nInput: " + text + "\nFour: " + four + ", Vision: " + vision);
+    console.log("\nFrom: " + origin + "\nInput: " + ", Vision: " + vision);
 
     let reply;
     try {
-        let reply = await chat(content, four, vision);
+        let reply = await chat(content, vision);
         if (reply.trim().length < 1) throw "empty message";
+        reply = reply.substring(0, 1999);
         message.reply({
             content: reply,
             allowedMentions:{repliedUser:false}
