@@ -1,7 +1,7 @@
 {
-    "dependencies": {
-        "chrono-node": "^2.6.3",
-        "discord.js": "^14.11.0",
-        "mathjs": "^11.12.0"
-    }
+  "dependencies": {
+    "chrono-node": "^2.7.6",
+    "discord.js": "^14.15.2",
+    "mathjs": "^11.12.0"
+  }
 }

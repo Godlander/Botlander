@@ -19,7 +19,7 @@ function int2hex(i : number) {
     return hex.length === 1 ? "0" + hex : hex;
 }
 function hex2rgb(hex : string) : Color {
-    let reg = /#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})/i.exec(hex);
+    let reg = /([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})/i.exec(hex);
     if (!reg) throw 0;
     return {
       r: parseInt(reg[1], 16),
@@ -51,19 +51,20 @@ export function parse(input : string) : APIEmbed {
         int : number,
         bin : string;
     const args = input.split(' ');
-    let m = input.match(/#([0-9a-f]{6})/i);
+    //look for hex
+    let m = input.match(/(?:#|0x)([0-9a-f]{6})/i);
     if (m) {
         hex = m[1];
         rgb = hex2rgb(hex);
     }
     //look for int
-    else if (args[0] === 'int') {
+    else if (args[0] === 'int' || /^[0-9]$/.test(args[2])) {
         int = parseInt(args[2]);
         hex = int.toString(16).padStart(6, '0');
         rgb = hex2rgb(hex);
     }
     //look for bin
-    else if (args[0] === 'bin') {
+    else if (args[0] === 'bin' || args[0] === 'b') {
         bin = input.slice(4).replace(/\s/g,'');
         int = parseInt(bin, 2);
         hex = int.toString(16).padStart(6, '0');
@@ -71,24 +72,20 @@ export function parse(input : string) : APIEmbed {
     }
     //look for rgb or vec3
     else {
-        let m = input.match(/(\w+)\(([\d.]+), *([\d.]+), *([\d.]+)\)/i);
+        let m = input.match(/(\w+)[( ]*([\d.]+)[, ]+([\d.]+)[, ]+([\d.]+)/i);
         if (!m || m.length != 5) throw 0;
-        switch (m[1]) {
-            case 'rgb':
-                rgb = {
-                    r: parseInt(m[2]),
-                    g: parseInt(m[3]),
-                    b: parseInt(m[4])
-                };
-                break;
-            case 'vec3':
-                rgb = vec32rgb({
-                    r: parseFloat(m[2]),
-                    g: parseFloat(m[3]),
-                    b: parseFloat(m[4])
-                });
-                break;
-        }
+        if (m[1] === 'rgb')
+            rgb = {
+                r: parseInt(m[2]),
+                g: parseInt(m[3]),
+                b: parseInt(m[4])
+            };
+        else if (m[1].startsWith('v'))
+            rgb = vec32rgb({
+                r: parseFloat(m[2]),
+                g: parseFloat(m[3]),
+                b: parseFloat(m[4])
+            });
     }
     if (rgb === undefined) throw 0;
     hex ??= rgb2hex(rgb);

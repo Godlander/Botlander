@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, Guild, SlashCommandBuilder } from 'discord.js';
 import { Commands } from '../bot';
 import path from 'path';
 import fs from 'fs/promises';
@@ -48,20 +48,23 @@ export async function command(interaction : ChatInputCommandInteraction) {
             return;
         }
         if (command[0].match("whitelist")) {
-            let whitelist = require("../data/chat/whitelist.json");
-            let name = null;
+            let whitelist = JSON.parse(await fs.readFile('data/chat/whitelist.json', 'utf-8'));
+            let name = '';
             if (command[1].match("guild|server")) {
-                const guild = await interaction.client.guilds.fetch(command[2]);
+                let guild : Guild | null;
+                if (command.length > 2) guild = await interaction.client.guilds.fetch(command[2]);
+                else guild = interaction.guild;
+                if (!guild) throw command[1] + " not found";
                 name = guild.name;
-                whitelist.guilds.push(command[2]);
+                whitelist.guilds[guild.id] = name;
             }
             else if (command[1].match("user")) {
                 const user = await interaction.client.users.fetch(command[2]);
                 name = user.username;
-                whitelist.users.push(command[2]);
+                if (!name) throw command[1] + " not found";
+                whitelist.users[command[2]] = name;
             }
-            if (!name) throw command[1] + " not found";
-            await fs.writeFile(__dirname + "/../data/chat/whitelist.json", JSON.stringify(whitelist));
+            await fs.writeFile("data/chat/whitelist.json", JSON.stringify(whitelist));
             await interaction.reply({content: `added ${name}`, ephemeral: ephemeral});
             return;
         }

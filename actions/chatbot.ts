@@ -5,16 +5,26 @@ import whitelist from '../data/chat/whitelist.json';
 
 var defaults = ["<@225455864876761088> plz help", "No comment.", "💩", "lol.", "...", "hmm.", "Hmmm.", "mhm.", "Mhm.", "yes.", "no.", "You're probably right.", "Yes?", "Sorry, I'm busy right now.", "Don't you have something better to do?", "Uh huh.", "Yeah sure.", "Okay.", "ok", "Sure.", "Hi.", "Go bother someone else.", "Glad to hear that.\nor sorry that happened."];
 
+const modes : Record<string, string> = {
+    "annoyed": "botlander is annoyed and replies with playful insults and witty remarks full of sarcasm",
+    "cute": "botlander is cute (´・ω・`) and uses a lot of unicode text faces (☉д⊙)"
+};
+let mode = "default";
+
 export async function chat(input : string, vision = false) : Promise<string> {
     let reply;
+    const model = "gpt-4o-mini";
+    let body : any = {
+        model: model,
+        max_tokens: 400,
+        messages:[]
+    }
+    if (mode in modes) body.messages.push({role: "system", content: modes[mode]});
+    body.messages.push({role: "user", content: input});
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: "POST",
         headers: {'Content-Type':'application/json','Authorization':'Bearer '+openaikey},
-        body: JSON.stringify({
-                model: "gpt-4o",
-                max_tokens: 400,
-                messages:[{role: "user", content: input}]
-            })
+        body: JSON.stringify(body)
     });
     const data = await res.json();
     reply = data.choices;
@@ -23,18 +33,16 @@ export async function chat(input : string, vision = false) : Promise<string> {
 }
 
 export default async function (message : Message) {
-    if (!(whitelist.guilds.includes(message.guildId ?? '0') || whitelist.users.includes(message.author.id))) return;
+    if (!((message.guildId ?? '' in whitelist.guilds) || (message.author.id in whitelist.users))) return;
     const text = message.content.replace(isbotlander, " ").replace(/'|"/gi, "\$&").replace(/ +/gi, " ")
-                                .normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, "").trim();
     let content : any = [{type: "text", text: text}];
-    const vision = message.content.includes('👀');
+    const four = message.content.includes('👀');
+    const vision = message.attachments.size > 0;
     if (vision) {
-        message.content.replace('👀','');
-        if (message.attachments.size > 0) { //if image attachment
-            const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
-            if (img != null) {
-                content.push({type: "image_url", image_url: {url: img.url+'width=512&height=512'}});
-            }
+        const img = message.attachments.find(a => a?.contentType?.startsWith("image"));
+        if (img != null) {
+            content.push({type: "image_url", image_url: {url: img.url+'width=512&height=512'}});
         }
     }
     let origin = message.author.username + " In: ";
@@ -42,7 +50,6 @@ export default async function (message : Message) {
     else origin += message.guild?.name + " " + message.guild?.id;
     console.log("\nFrom: " + origin + "\nInput: " + ", Vision: " + vision);
 
-    let reply;
     try {
         let reply = await chat(content, vision);
         if (reply.trim().length < 1) throw "empty message";
