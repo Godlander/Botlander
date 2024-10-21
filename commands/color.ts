@@ -1,11 +1,21 @@
 import {
   APIEmbed,
+  ApplicationIntegrationType,
   ChatInputCommandInteraction,
+  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 
 export const slashcommand = new SlashCommandBuilder()
-  .setContexts([0, 1, 2])
+  .setContexts([
+    InteractionContextType.Guild,
+    InteractionContextType.BotDM,
+    InteractionContextType.PrivateChannel,
+  ])
+  .setIntegrationTypes([
+    ApplicationIntegrationType.GuildInstall,
+    ApplicationIntegrationType.UserInstall,
+  ])
   .setName("color")
   .setDescription("Converts color formats")
   .addStringOption((option) =>
@@ -67,8 +77,8 @@ export function parse(input: string): APIEmbed {
     rgb = hex2rgb(hex);
   }
   //look for int
-  else if (args[0] === "int" || /^[0-9]$/.test(args[2])) {
-    int = parseInt(args[2]);
+  else if (args[0] === "int" || args[0] === "i") {
+    int = parseInt(args[1]);
     hex = int.toString(16).padStart(6, "0");
     rgb = hex2rgb(hex);
   }

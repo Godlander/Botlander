@@ -1,12 +1,22 @@
 import * as chrono from "chrono-node";
 import {
+  ApplicationIntegrationType,
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 
 export const slashcommand = new SlashCommandBuilder()
-  .setContexts([0, 1, 2])
+  .setContexts([
+    InteractionContextType.Guild,
+    InteractionContextType.BotDM,
+    InteractionContextType.PrivateChannel,
+  ])
+  .setIntegrationTypes([
+    ApplicationIntegrationType.GuildInstall,
+    ApplicationIntegrationType.UserInstall,
+  ])
   .setName("time")
   .setDescription("Converts time to discord timestamp format")
   .addStringOption((option) =>

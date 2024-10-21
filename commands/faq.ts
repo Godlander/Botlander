@@ -62,7 +62,7 @@ export const slashcommand = new SlashCommandBuilder()
           .setAutocomplete(true)
           .setRequired(true)
       )
-  )
+  );
 
 type Faq = string | APIEmbed;
 type FaqList = Record<string, Faq>; // Index is the faq key

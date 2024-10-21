@@ -1,8 +1,21 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  ApplicationIntegrationType,
+  ChatInputCommandInteraction,
+  InteractionContextType,
+  SlashCommandBuilder,
+} from "discord.js";
 import { evaluate } from "mathjs";
 
 export const slashcommand = new SlashCommandBuilder()
-  .setContexts([0, 1, 2])
+  .setContexts([
+    InteractionContextType.Guild,
+    InteractionContextType.BotDM,
+    InteractionContextType.PrivateChannel,
+  ])
+  .setIntegrationTypes([
+    ApplicationIntegrationType.GuildInstall,
+    ApplicationIntegrationType.UserInstall,
+  ])
   .setName("calc")
   .setDescription("Calculates an expression")
   .addStringOption((option) =>

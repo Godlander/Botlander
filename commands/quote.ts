@@ -13,7 +13,6 @@ import {
 import { getmessage } from "../lib";
 
 export const slashcommand = new SlashCommandBuilder()
-  .setContexts([0, 1, 2])
   .setName("quote")
   .setDescription("Quotes a message")
   .addStringOption((option) =>
