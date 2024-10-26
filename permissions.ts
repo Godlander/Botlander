@@ -6,11 +6,6 @@ import {
 } from "discord.js";
 import { ownerid, clientid } from "./config.json";
 
-export const isbotlander = new RegExp(
-  `((^|[^\\w/\\\\><()[\\];])botlander($|[^\\w/\\\\><()[\\];]))|<@!?${clientid}>`,
-  "gi"
-);
-
 export default {
   //true if bot has permission
   self(channel: GuildChannel, arr: bigint[]) {
@@ -45,6 +40,11 @@ export default {
 
   //true if message contains botlander call
   botlander(message: Message) {
-    return isbotlander.test(message.content);
+    const text = message.content;
+    return (
+      text.includes('Botlander') ||
+      text.includes('botlander') ||
+      text.includes(`<@${clientid}>`)
+    )
   },
 };

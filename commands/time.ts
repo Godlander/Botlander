@@ -1,4 +1,4 @@
-import * as chrono from "chrono-node";
+import { parse } from "chrono-node";
 import {
   ApplicationIntegrationType,
   AutocompleteInteraction,
@@ -41,7 +41,7 @@ export const slashcommand = new SlashCommandBuilder()
   );
 
 export function gettime(input: string, forward: boolean = true) {
-  const gettime = chrono.parse(input, new Date(), { forwardDate: forward });
+  const gettime = parse(input, new Date(), { forwardDate: forward });
   if (gettime.length === 0) return;
   return gettime[0].start.date().getTime();
 }

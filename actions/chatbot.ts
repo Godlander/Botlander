@@ -1,6 +1,5 @@
 import { Message } from "discord.js";
 import { openaikey } from "../config.json";
-import { isbotlander } from "../permissions";
 import whitelist from "../data/chat/whitelist.json";
 
 var defaults = [
@@ -70,7 +69,7 @@ export default async function (message: Message) {
   )
     return;
   const text = message.content
-    .replace(isbotlander, " ")
+    .replace(/botlander/gi, " ")
     .replace(/'|"/gi, "$&")
     .replace(/ +/gi, " ")
     .normalize("NFD")

@@ -15,7 +15,9 @@ async function sendtyping(channel: Channel) {
   if ("sendTyping" in channel)
     try {
       channel.sendTyping();
-    } catch {}
+    } catch {
+      console.log("hihixd");
+    }
 }
 
 export async function run(message: Message) {
@@ -24,14 +26,13 @@ export async function run(message: Message) {
   if (
     perms.bot(message) ||
     !perms.botlander(message) ||
-    !(
-      message.channel.isDMBased() ||
-      perms.self(message.channel as GuildChannel, [
-        PermissionFlagsBits.SendMessages,
-      ])
-    )
-  )
+    message.channel.isDMBased() ||
+    !perms.self(message.channel as GuildChannel, [
+      PermissionFlagsBits.SendMessages,
+    ])
+  ) {
     return;
+  }
 
   sendtyping(message.channel);
   const typing = setInterval(() => {
