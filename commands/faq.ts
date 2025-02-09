@@ -5,7 +5,6 @@ import {
   ChatInputCommandInteraction,
   APIEmbed,
 } from "discord.js";
-import path from "path";
 import fs from "fs";
 import perms from "../permissions";
 
@@ -63,6 +62,13 @@ export const slashcommand = new SlashCommandBuilder()
           .setRequired(true)
       )
   );
+
+function save(id: string) {
+  fs.writeFileSync(
+    __dirname + "../data/faq/" + id + ".json",
+    JSON.stringify(FAQ.local[id])
+  );
+}
 
 type Faq = string | APIEmbed;
 type FaqList = Record<string, Faq>; // Index is the faq key
@@ -187,18 +193,12 @@ export async function command(interaction: ChatInputCommandInteraction) {
     if (FAQ.add(id, tag, content))
       send(interaction, `Edited faq \`${tag}\` with:`, content);
     else send(interaction, `Added faq \`${tag}\` with:`, content);
-    fs.writeFileSync(
-      path.join(__dirname, "../", "data", "faq", id + ".json"),
-      JSON.stringify(FAQ.local[id])
-    );
+    save(id);
   } else if (interaction.options.getSubcommand() === "remove") {
     if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
     if (FAQ.remove(id, tag))
       interaction.reply({ content: `Removed faq \`${tag}\`` });
     else interaction.reply({ content: `No faq \`${tag}\``, ephemeral: true });
-    fs.writeFileSync(
-      path.join(__dirname, "../", "data", "faq", id + ".json"),
-      JSON.stringify(FAQ.local[id])
-    );
+    save(id);
   }
 }

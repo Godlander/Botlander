@@ -1,39 +1,49 @@
 import { Message } from "discord.js";
 import { openaikey } from "../config.json";
 import whitelist from "../data/chat/whitelist.json";
+import fs from "fs";
 
-var defaults = [
-  "<@225455864876761088> plz help",
-  "No comment.",
-  "💩",
-  "lol.",
-  "...",
-  "hmm.",
-  "Hmmm.",
-  "mhm.",
-  "Mhm.",
-  "yes.",
-  "no.",
-  "You're probably right.",
-  "Yes?",
-  "Sorry, I'm busy right now.",
-  "Don't you have something better to do?",
-  "Uh huh.",
-  "Yeah sure.",
-  "Okay.",
-  "ok",
-  "Sure.",
-  "Hi.",
-  "Go bother someone else.",
-  "Glad to hear that.\nor sorry that happened.",
-];
-
-const modes: Record<string, string> = {
-  annoyed:
-    "botlander is annoyed and replies with playful insults and witty remarks full of sarcasm",
-  cute: "botlander is cute (´・ω・`) and uses a lot of unicode text faces (☉д⊙)",
+export const modes = {
+  list: {} as any,
+  mode: "default",
+  get: function () {
+    return this.list[this.mode];
+  },
+  set: function (mode: string) {
+    if (mode in this.list) {
+      this.mode = mode;
+      this.list.selected = mode;
+      console.log("Chatbot mode: " + this.mode);
+      this.save();
+      return true;
+    }
+    return false;
+  },
+  reload: function () {
+    this.list = require(__dirname + "/../data/chat/modes.json");
+    this.mode = this.list.selected;
+  },
+  add: function (name: string, content: string) {
+    this.list[name] = content;
+    this.save();
+    this.reload();
+  },
+  remove: function (name: string) {
+    if (name in this.list) {
+      delete this.list[name];
+      this.save();
+      this.reload();
+    }
+  },
+  save: function () {
+    fs.writeFileSync(
+      __dirname + "/../data/chat/modes.json",
+      JSON.stringify(this.list)
+    );
+  }
 };
-let mode = "default";
+modes.reload();
+console.log("Chatbot mode: " + modes.mode);
 
 export async function chat(input: string, vision = false): Promise<string> {
   let reply;
@@ -43,8 +53,10 @@ export async function chat(input: string, vision = false): Promise<string> {
     max_tokens: 400,
     messages: [],
   };
-  if (mode in modes)
-    body.messages.push({ role: "system", content: modes[mode] });
+  //select mode
+  const modetext = modes.get();
+  if (modetext) body.messages.push({ role: "system", content: modetext });
+  //get response
   body.messages.push({ role: "user", content: input });
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -76,7 +88,6 @@ export default async function (message: Message) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
   let content: any = [{ type: "text", text: text }];
-  const four = message.content.includes("👀");
   const vision = message.attachments.size > 0;
   if (vision) {
     const img = message.attachments.find((a) =>
@@ -90,9 +101,10 @@ export default async function (message: Message) {
     }
   }
   let origin = message.author.username + " In: ";
-  if (message.channel.isDMBased()) origin += "dm";
+  const dm = message.channel.isDMBased();
+  if (dm) origin += "dm";
   else origin += message.guild?.name + " " + message.guild?.id;
-  console.log("\nFrom: " + origin + "\nInput: " + ", Vision: " + vision);
+  console.log("\nFrom: " + origin + "\nInput: " + message.content + ", Vision: " + vision);
 
   try {
     let reply = await chat(content, vision);

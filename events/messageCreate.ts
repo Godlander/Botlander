@@ -24,9 +24,9 @@ export async function run(message: Message) {
   //ignore bot messages and non botlander calls
   //quit if no permission
   if (
+    !message ||
     perms.bot(message) ||
     !perms.botlander(message) ||
-    message.channel.isDMBased() ||
     !perms.self(message.channel as GuildChannel, [
       PermissionFlagsBits.SendMessages,
     ])

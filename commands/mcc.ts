@@ -27,31 +27,7 @@ export const slashcommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-let brigadier: any;
-
-export function getcommand(input: string): string[] | null {
-  const args = input.replaceAll("<", "").replaceAll(">", "").split(" ");
-  const last = args[args.length - 1];
-  args.pop();
-  let cmd = brigadier;
-  for (const arg of args) {
-    if (arg in cmd) cmd = cmd[arg].children;
-    else return null;
-  }
-  let out: string[] = [];
-  const prefix = input.split(" ").slice(0, -1).join(" ");
-  for (const s in cmd) {
-    if (s.startsWith(last)) {
-      if (cmd[s]["type"] === "literal") {
-        out.push(prefix + " " + s);
-      } else if (cmd[s]["type"] === "argument") {
-        out.push(prefix + " <" + s + ">");
-      }
-    }
-  }
-  return out;
-}
-
+let mcc: any;
 fetch(
   "https://raw.githubusercontent.com/Ersatz77/mcdata/refs/heads/main/generated/reports/commands.json"
 )
@@ -59,9 +35,37 @@ fetch(
   .then((buffer) => {
     const decoder = new TextDecoder("utf-8");
     const data = decoder.decode(buffer);
-    brigadier = JSON.parse(data)["children"];
+    mcc = JSON.parse(data)["children"];
   })
   .catch((err) => console.log("Error: " + err.message));
+
+export function getcommand(input: string): string[] | null {
+  const args = input.replaceAll("<", "").replaceAll(">", "").split(" ");
+  const last = args[args.length - 1];
+  args.pop();
+  let cmd = mcc;
+  let prefix = "";
+  for (const arg of args) {
+    if (arg in cmd) {
+      cmd = cmd[arg].children;
+      prefix += arg + " ";
+    } else {
+      const keys = Object.keys(cmd);
+      return null;
+    }
+  }
+  let out: string[] = [];
+  for (const s in cmd) {
+    if (s.startsWith(last)) {
+      if (cmd[s]["type"] === "literal") {
+        out.push(prefix + " " + s + " ");
+      } else if (cmd[s]["type"] === "argument") {
+        out.push(prefix + " <" + s + "> ");
+      }
+    }
+  }
+  return out;
+}
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const input = interaction.options.getString("command", true);
@@ -69,11 +73,11 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
   const commands = getcommand(input);
   //no command found
   if (!commands) {
-    interaction.respond([]);
+    interaction.respond([{ name: "Invalid Command", value: "" }]);
     return;
   }
   interaction.respond(
-    commands.slice(0, 25).map((e) => ({ name: e, value: e + " " }))
+    commands.slice(0, 25).map((e) => ({ name: e, value: e }))
   );
 }
 

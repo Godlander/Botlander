@@ -2,13 +2,14 @@ import {
   ChatInputCommandInteraction,
   Message,
   PermissionsBitField,
-  GuildChannel,
+  Channel,
 } from "discord.js";
 import { ownerid, clientid } from "./config.json";
 
 export default {
   //true if bot has permission
-  self(channel: GuildChannel, arr: bigint[]) {
+  self(channel: Channel, arr: bigint[]) {
+    if (channel.isDMBased()) return true;
     return channel.guild.members.me?.permissions.has(arr);
   },
 
@@ -41,7 +42,7 @@ export default {
   //true if message contains botlander call
   botlander(message: Message) {
     const text = message.content;
-    return (
+    return (text &&
       text.includes('Botlander') ||
       text.includes('botlander') ||
       text.includes(`<@${clientid}>`)

@@ -9,6 +9,7 @@ import fs from "fs/promises";
 import { existsSync } from "fs";
 import perms from "../permissions";
 import * as lib from "../lib";
+import { modes } from "../actions/chatbot";
 
 export const slashcommand = new SlashCommandBuilder()
   .setName("admin")
@@ -30,9 +31,13 @@ export async function command(interaction: ChatInputCommandInteraction) {
     .getString("command", true)
     .toLowerCase()
     .split(" ");
+
+  // publicly visible or ephemeral
   const ephemeral = command[0].startsWith("pub") ? false : true;
   console.log(command);
+
   try {
+    // shutdown bot
     if (command[0].match("shutdown|stop|quit")) {
       await interaction.reply({
         content: `Shutting down.`,
@@ -40,6 +45,8 @@ export async function command(interaction: ChatInputCommandInteraction) {
       });
       process.exit();
     }
+
+    // reload slash command
     if (command[0].match("reload")) {
       const cmd = Commands.get(command[1]);
       console.log(cmd);
@@ -62,6 +69,31 @@ export async function command(interaction: ChatInputCommandInteraction) {
       }
       return;
     }
+
+    // list files
+    // ls|dir|list path
+    if (command[0].match("ls|dir|list")) {
+      let dir = directory(command[1]);
+      const stat = await fs.lstat(dir);
+      if (stat.isDirectory()) {
+        const files = await fs.readdir(dir);
+        const out = "```\n" + files.join("\n") + "\n```";
+        await interaction.reply({ content: out, ephemeral: ephemeral });
+      } else if (stat.isFile()) {
+        const ext = path.extname(dir).substring(1);
+        const txt = await fs.readFile(dir);
+        const msg = "```" + ext + "\n" + txt + "\n```";
+        if (msg.length < 2000) {
+          await interaction.reply({ content: msg, ephemeral: ephemeral });
+        } else {
+          await interaction.reply({ files: [dir], ephemeral: ephemeral });
+        }
+      } else throw command[1] + " not found";
+      return;
+    }
+
+    // whitelist server or user for chatbot
+    // whitelist add|remove user|guild| id
     if (command[0].match("whitelist")) {
       let whitelist = JSON.parse(
         await fs.readFile("data/chat/whitelist.json", "utf-8")
@@ -88,25 +120,53 @@ export async function command(interaction: ChatInputCommandInteraction) {
       });
       return;
     }
-    if (command[0].match("ls|dir|list")) {
-      let dir = directory(command[1]);
-      const stat = await fs.lstat(dir);
-      if (stat.isDirectory()) {
-        const files = await fs.readdir(dir);
-        const out = "```\n" + files.join("\n") + "\n```";
-        await interaction.reply({ content: out, ephemeral: ephemeral });
-      } else if (stat.isFile()) {
-        const ext = path.extname(dir).substring(1);
-        const txt = await fs.readFile(dir);
-        const msg = "```" + ext + "\n" + txt + "\n```";
-        if (msg.length < 2000) {
-          await interaction.reply({ content: msg, ephemeral: ephemeral });
-        } else {
-          await interaction.reply({ files: [dir], ephemeral: ephemeral });
-        }
-      } else throw command[1] + " not found";
-      return;
+
+    // chatbot modes
+    // mode set|get|list|new|remove name content
+    if (command[0].match("mode")) {
+      const action = command[1];
+      if (action.match("set")) {
+        modes.set(command[2]);
+        await interaction.reply({
+          content: `mode set to ${modes.mode}`,
+          ephemeral: ephemeral,
+        });
+        return;
+      }
+      if (action.match("get")) {
+        await interaction.reply({
+          content: `mode is ${modes.mode}`,
+          ephemeral: ephemeral,
+        });
+        return;
+      }
+      if (action.match("list")) {
+        await interaction.reply({
+          content: `modes: \n\`${Object.keys(modes.list).join("`, `")}\``,
+          ephemeral: ephemeral,
+        });
+        return;
+      }
+      if (action.match("new")) {
+        const content = command.slice(3).join(" ");
+        modes.add(command[2], content);
+        await interaction.reply({
+          content: `mode ${command[2]} created with: \n\`${content}\``,
+          ephemeral: ephemeral,
+        });
+        return;
+      }
+      if (action.match("remove")) {
+        modes.remove(command[2]);
+        await interaction.reply({
+          content: `mode ${command[2]} removed`,
+          ephemeral: ephemeral,
+        });
+        return;
+      }
     }
+
+    // eval code
     if (command[0].match("eval")) {
       command.shift();
       const s = command.join(" ");
