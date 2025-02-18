@@ -50,7 +50,7 @@ export const modes = {
 };
 modes.reload();
 
-export async function chat(input: string, mode = ""): Promise<string> {
+export async function chat(input: string, modelist: string[] = ["default"]): Promise<string> {
   let reply;
   const model = "gpt-4o-mini";
   let body: any = {
@@ -59,8 +59,7 @@ export async function chat(input: string, mode = ""): Promise<string> {
     messages: [],
   };
   //select mode
-  const modetext = modes.get(mode);
-  if (modetext) body.messages.push({ role: "system", content: modetext });
+  for (const mode of modelist) body.messages.push({ role: "system", content: modes.get(mode) });
   //get response
   body.messages.push({ role: "user", content: input });
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -112,14 +111,12 @@ export default async function (message: Message) {
     .trim();
 
   // mode
-  let mode = "";
+  let modelist = [];
   if (message.content.includes(`<@${clientid}>`)) {
-    mode = "default";
     for (const key in modes.list) {
       if (modes.list[key].icon && text.includes(modes.list[key].icon)) {
-        mode = key;
+        modelist.push(key);
         text = text.replace(key, "");
-        break;
       }
     }
   }
@@ -136,7 +133,7 @@ export default async function (message: Message) {
 
   // try reply
   try {
-    let reply = await chat(content, mode);
+    let reply = await chat(content, modelist);
     if (reply.trim().length < 1) throw "empty message";
     reply = reply.substring(0, 1999);
     message.reply({

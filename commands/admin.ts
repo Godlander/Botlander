@@ -146,8 +146,12 @@ export async function command(interaction: ChatInputCommandInteraction) {
         return;
       }
       if (action.match("list")) {
+        let text = "";
+        for (const mode in modes.list) {
+          text += `${mode}: ${modes.list[mode].icon}, `;
+        }
         await interaction.reply({
-          content: `modes: \n\`${Object.keys(modes.list).join("`, `")}\``,
+          content: `modes: \n${text}`,
           ephemeral: ephemeral,
         });
         return;
