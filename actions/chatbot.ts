@@ -1,30 +1,36 @@
 import { Message } from "discord.js";
-import { openaikey } from "../config.json";
+import { openaikey, clientid } from "../config.json";
 import whitelist from "../data/chat/whitelist.json";
 import fs from "fs";
 
+import defaults from "../data/chat/defaults.json";
+
 export const modes = {
   list: {} as any,
-  mode: "default",
-  get: function () {
-    return this.list[this.mode];
+  selected: "default",
+  get: function (mode = "") {
+    if (mode) return this.list[mode].text;
+    return this.list[this.selected].text;
   },
   set: function (mode: string) {
     if (mode in this.list) {
-      this.mode = mode;
-      this.list.selected = mode;
-      console.log("Chatbot mode: " + this.mode);
+      this.selected = mode;
       this.save();
+      console.log("Chatbot mode: " + this.selected);
+      console.log(this.get());
       return true;
     }
     return false;
   },
   reload: function () {
-    this.list = require(__dirname + "/../data/chat/modes.json");
-    this.mode = this.list.selected;
+    let file = require(__dirname + "/../data/chat/modes.json");
+    this.selected = file.selected;
+    this.list = file.list;
+    console.log("Chatbot mode: " + this.selected);
+    console.log(this.get());
   },
-  add: function (name: string, content: string) {
-    this.list[name] = content;
+  add: function (name: string, content: string, icon: string) {
+    this.list[name] = { text: content, icon: icon };
     this.save();
     this.reload();
   },
@@ -38,14 +44,13 @@ export const modes = {
   save: function () {
     fs.writeFileSync(
       __dirname + "/../data/chat/modes.json",
-      JSON.stringify(this.list)
+      JSON.stringify({ selected: this.selected, list: this.list }, null, 2)
     );
-  }
+  },
 };
 modes.reload();
-console.log("Chatbot mode: " + modes.mode);
 
-export async function chat(input: string, vision = false): Promise<string> {
+export async function chat(input: string, mode = ""): Promise<string> {
   let reply;
   const model = "gpt-4o-mini";
   let body: any = {
@@ -54,7 +59,7 @@ export async function chat(input: string, vision = false): Promise<string> {
     messages: [],
   };
   //select mode
-  const modetext = modes.get();
+  const modetext = modes.get(mode);
   if (modetext) body.messages.push({ role: "system", content: modetext });
   //get response
   body.messages.push({ role: "user", content: input });
@@ -80,14 +85,9 @@ export default async function (message: Message) {
     )
   )
     return;
-  const text = message.content
-    .replace(/botlander/gi, " ")
-    .replace(/'|"/gi, "$&")
-    .replace(/ +/gi, " ")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-  let content: any = [{ type: "text", text: text }];
+  let content: any = [];
+
+  // vision if msg has image attachment
   const vision = message.attachments.size > 0;
   if (vision) {
     const img = message.attachments.find((a) =>
@@ -100,14 +100,43 @@ export default async function (message: Message) {
       });
     }
   }
+
+  // clean up text
+  let text = message.content
+    .replace(/botlander/gi, " ")
+    .replace(`<@${clientid}>`, " ")
+    .replace(/'|"/gi, "$&")
+    .replace(/ +/gi, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  // mode
+  let mode = "";
+  if (message.content.includes(`<@${clientid}>`)) {
+    mode = "default";
+    for (const key in modes.list) {
+      if (modes.list[key].icon && text.includes(modes.list[key].icon)) {
+        mode = key;
+        text = text.replace(key, "");
+        break;
+      }
+    }
+  }
+  content.push({ type: "text", text: text });
+
+  // log
   let origin = message.author.username + " In: ";
   const dm = message.channel.isDMBased();
   if (dm) origin += "dm";
   else origin += message.guild?.name + " " + message.guild?.id;
-  console.log("\nFrom: " + origin + "\nInput: " + message.content + ", Vision: " + vision);
+  console.log(
+    "\nFrom: " + origin + "\nInput: " + message.content + ", Vision: " + vision
+  );
 
+  // try reply
   try {
-    let reply = await chat(content, vision);
+    let reply = await chat(content, mode);
     if (reply.trim().length < 1) throw "empty message";
     reply = reply.substring(0, 1999);
     message.reply({
@@ -117,9 +146,8 @@ export default async function (message: Message) {
     console.log("Output: " + reply);
   } catch (e) {
     console.log(e);
-    //reply = defaults[Math.floor(Math.random()*defaults.length)]
     message.reply({
-      content: "<@225455864876761088> plz help",
+      content: defaults[Math.floor(Math.random() * defaults.length)],
       allowedMentions: { repliedUser: false },
     });
   }

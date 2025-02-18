@@ -27,10 +27,7 @@ function directory(path: null | string): string {
 
 export async function command(interaction: ChatInputCommandInteraction) {
   if (!perms.owner(interaction)) return;
-  const command = interaction.options
-    .getString("command", true)
-    .toLowerCase()
-    .split(" ");
+  const command = interaction.options.getString("command", true).split(" ");
 
   // publicly visible or ephemeral
   const ephemeral = command[0].startsWith("pub") ? false : true;
@@ -126,16 +123,24 @@ export async function command(interaction: ChatInputCommandInteraction) {
     if (command[0].match("mode")) {
       const action = command[1];
       if (action.match("set")) {
-        modes.set(command[2]);
-        await interaction.reply({
-          content: `mode set to ${modes.mode}`,
-          ephemeral: ephemeral,
-        });
+        if (modes.set(command[2]))
+          await interaction.reply({
+            content: `mode set to ${modes.selected}`,
+            ephemeral: ephemeral,
+          });
+        else
+          await interaction.reply({
+            content: `no mode ${command[2]}`,
+            ephemeral: ephemeral,
+          });
         return;
       }
       if (action.match("get")) {
+        let m = "";
+        if (command[2]) m = command[2];
+        else m = modes.selected;
         await interaction.reply({
-          content: `mode is ${modes.mode}`,
+          content: `${m}:\n${modes.get(m)}`,
           ephemeral: ephemeral,
         });
         return;
@@ -147,16 +152,18 @@ export async function command(interaction: ChatInputCommandInteraction) {
         });
         return;
       }
-      if (action.match("new")) {
-        const content = command.slice(3).join(" ");
-        modes.add(command[2], content);
+      if (action.match("new") || action.match("add")) {
+        let icon = command[3];
+        if (icon == "none") icon = "";
+        const content = command.slice(4).join(" ");
+        modes.add(command[2], content, icon);
         await interaction.reply({
-          content: `mode ${command[2]} created with: \n\`${content}\``,
+          content: `mode ${command[2]} created with: \n${content}`,
           ephemeral: ephemeral,
         });
         return;
       }
-      if (action.match("remove")) {
+      if (action.match("remove") || action.match("delete")) {
         modes.remove(command[2]);
         await interaction.reply({
           content: `mode ${command[2]} removed`,
@@ -169,7 +176,8 @@ export async function command(interaction: ChatInputCommandInteraction) {
     // eval code
     if (command[0].match("eval")) {
       command.shift();
-      const s = command.join(" ");
+      let s = command.join(" ");
+      if (!s.includes("return")) s = "return " + s;
       const out = await eval(
         `async (i) => {try{` + s + `}catch(e){return e;}}`
       )(interaction);
