@@ -1,4 +1,4 @@
-import { Interaction, Message } from "discord.js";
+import { Interaction, Message, MessageFlags } from "discord.js";
 
 export function isstring(s: unknown): Boolean {
   return typeof s === "string";
@@ -30,12 +30,12 @@ export function getmessagelink(message: Message): string {
 export async function errorreply(
   interaction: Interaction,
   e: any,
-  ephemeral: boolean = true
+  flags: number | undefined = MessageFlags.Ephemeral
 ) {
   if (!interaction.isCommand()) return;
   if (!isstring(e)) {
     if ("rawError" in e) e = e.rawError;
     e = "```json\n" + JSON.stringify(e, Object.getOwnPropertyNames(e)) + "```";
   }
-  interaction.reply({ content: e.slice(0, 2000), ephemeral: ephemeral });
+  interaction.reply({ content: e.slice(0, 2000), flags: flags });
 }

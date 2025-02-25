@@ -27,7 +27,7 @@ export async function run(message: Message) {
     !message ||
     perms.bot(message) ||
     !perms.botlander(message) ||
-    !perms.self(message.channel as GuildChannel, [
+    !perms.self(message.channel as Channel, [
       PermissionFlagsBits.SendMessages,
     ])
   ) {
