@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   Guild,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { Commands } from "../bot";
@@ -30,7 +31,9 @@ export async function command(interaction: ChatInputCommandInteraction) {
   const command = interaction.options.getString("command", true).split(" ");
 
   // publicly visible or ephemeral
-  const ephemeral = command[0].startsWith("pub") ? false : true;
+  const flags = command[0].startsWith("pub")
+    ? undefined
+    : MessageFlags.Ephemeral;
   console.log(command);
 
   try {
@@ -38,33 +41,9 @@ export async function command(interaction: ChatInputCommandInteraction) {
     if (command[0].match("shutdown|stop|quit")) {
       await interaction.reply({
         content: `Shutting down.`,
-        ephemeral: ephemeral,
+        flags: flags,
       });
       process.exit();
-    }
-
-    // reload slash command
-    if (command[0].match("reload")) {
-      const cmd = Commands.get(command[1]);
-      console.log(cmd);
-      if (!cmd) throw command[1] + " not found";
-      delete require.cache[require.resolve(`./${cmd.slashcommand.name}.ts`)];
-      try {
-        Commands.delete(cmd.slashcommand.name);
-        const newCommand = require(`./${cmd.slashcommand.name}.ts`);
-        Commands.set(newCommand.slashcommand.name, newCommand);
-        await interaction.reply({
-          content: `\`${newCommand.slashcommand.name}\` reloaded`,
-          ephemeral: ephemeral,
-        });
-      } catch (e) {
-        console.error(e);
-        await interaction.reply({
-          content: `\`/${cmd.slashcommand.name}\` couldn't load:\`\`\`\n${e}\n\`\`\``,
-          ephemeral: ephemeral,
-        });
-      }
-      return;
     }
 
     // list files
@@ -74,16 +53,22 @@ export async function command(interaction: ChatInputCommandInteraction) {
       const stat = await fs.lstat(dir);
       if (stat.isDirectory()) {
         const files = await fs.readdir(dir);
-        const out = "```\n" + files.join("\n") + "\n```";
-        await interaction.reply({ content: out, ephemeral: ephemeral });
+        const out = `\`\`\`\n${files.join("\n")}\n\`\`\``;
+        await interaction.reply({ content: out, flags: flags });
       } else if (stat.isFile()) {
         const ext = path.extname(dir).substring(1);
-        const txt = await fs.readFile(dir);
-        const msg = "```" + ext + "\n" + txt + "\n```";
+        const file = await fs.readFile(dir);
+        let txt = file.toString();
+        //cut to selected lines
+        if (command[2]) {
+          const lines = command[2].split("-").map(Number);
+          txt = txt.split("\n").slice(lines[0], lines[1]).join("\n");
+        }
+        const msg = `\`\`\`${ext}\n${txt}\n\`\`\``;
         if (msg.length < 2000) {
-          await interaction.reply({ content: msg, ephemeral: ephemeral });
+          await interaction.reply({ content: msg, flags: flags });
         } else {
-          await interaction.reply({ files: [dir], ephemeral: ephemeral });
+          await interaction.reply({ files: [dir], flags: flags });
         }
       } else throw command[1] + " not found";
       return;
@@ -113,7 +98,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
       await fs.writeFile("data/chat/whitelist.json", JSON.stringify(whitelist));
       await interaction.reply({
         content: `added ${name}`,
-        ephemeral: ephemeral,
+        flags: flags,
       });
       return;
     }
@@ -126,12 +111,12 @@ export async function command(interaction: ChatInputCommandInteraction) {
         if (modes.set(command[2]))
           await interaction.reply({
             content: `mode set to ${modes.selected}`,
-            ephemeral: ephemeral,
+            flags: flags,
           });
         else
           await interaction.reply({
             content: `no mode ${command[2]}`,
-            ephemeral: ephemeral,
+            flags: flags,
           });
         return;
       }
@@ -141,7 +126,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
         else m = modes.selected;
         await interaction.reply({
           content: `${m}:\n${modes.get(m)}`,
-          ephemeral: ephemeral,
+          flags: flags,
         });
         return;
       }
@@ -152,7 +137,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
         }
         await interaction.reply({
           content: `modes: \n${text}`,
-          ephemeral: ephemeral,
+          flags: flags,
         });
         return;
       }
@@ -163,7 +148,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
         modes.add(command[2], content, icon);
         await interaction.reply({
           content: `mode ${command[2]} created with: \n${content}`,
-          ephemeral: ephemeral,
+          flags: flags,
         });
         return;
       }
@@ -171,7 +156,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
         modes.remove(command[2]);
         await interaction.reply({
           content: `mode ${command[2]} removed`,
-          ephemeral: ephemeral,
+          flags: flags,
         });
         return;
       }
@@ -187,12 +172,12 @@ export async function command(interaction: ChatInputCommandInteraction) {
       )(interaction);
       await interaction.reply({
         content: `\`\`\`\n${out}\n\`\`\``.slice(0, 2000),
-        ephemeral: ephemeral,
+        flags: flags,
       });
       return;
     }
   } catch (e) {
     console.log(e);
-    lib.errorreply(interaction, e, ephemeral);
+    lib.errorreply(interaction, e, flags);
   }
 }
