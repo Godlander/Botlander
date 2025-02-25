@@ -62,7 +62,10 @@ export async function command(interaction: ChatInputCommandInteraction) {
         //cut to selected lines
         if (command[2]) {
           const lines = command[2].split("-").map(Number);
-          txt = txt.split("\n").slice(lines[0], lines[1]).join("\n");
+          txt = txt
+            .split("\n")
+            .slice(lines[0] - 1, lines[1] ?? lines[0])
+            .join("\n");
         }
         const msg = `\`\`\`${ext}\n${txt}\n\`\`\``;
         if (msg.length < 2000) {
