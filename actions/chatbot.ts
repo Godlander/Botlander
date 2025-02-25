@@ -4,7 +4,6 @@ import whitelist from "../data/chat/whitelist.json";
 import fs from "fs";
 
 import defaults from "../data/chat/defaults.json";
-import { mode } from "mathjs";
 
 export const modes = {
   list: {} as any,
@@ -91,15 +90,12 @@ export async function chat(
   else throw data;
 }
 
-async function gethistory(message: Message, replies: any = [], limit = 5000) {
+async function gethistory(message: Message, replies: any = [], limit = 4000) {
   //clean up text
   let text = message.content
+    .replaceAll(`<@${clientid}>`, " ")
     .replace(/botlander/gi, " ")
-    .replace(`<@${clientid}>`, " ")
-    .replace(/'|"/gi, "$&")
     .replace(/ +/gi, " ")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
     .trim();
   if (message.content.includes(`<@${clientid}>`)) {
     for (const key in modes.list) {
