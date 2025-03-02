@@ -4,13 +4,12 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
-import { Commands } from "../bot";
 import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import perms from "../permissions";
-import * as lib from "../lib";
-import { modes } from "../actions/chatbot";
+import * as lib from "../lib/message";
+import { modes } from "../lib/chat";
 
 export const slashcommand = new SlashCommandBuilder()
   .setName("admin")

@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { getmessage } from "../lib";
+import { getmessage } from "../lib/message";
 import { quote } from "./quote";
 
 export const slashcommand = new SlashCommandBuilder()

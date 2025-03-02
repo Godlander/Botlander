@@ -10,7 +10,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { getmessage } from "../lib";
+import { getmessage } from "../lib/message";
 
 export const slashcommand = new SlashCommandBuilder()
   .setName("quote")

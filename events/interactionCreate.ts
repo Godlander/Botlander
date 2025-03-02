@@ -1,6 +1,6 @@
 import { Events, Interaction } from "discord.js";
 import { Commands } from "../bot";
-import { errorreply } from "../lib";
+import { errorreply } from "../lib/message";
 
 export const name = Events.InteractionCreate;
 
