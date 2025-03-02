@@ -42,10 +42,11 @@ export default {
   //true if message contains botlander call
   botlander(message: Message) {
     const text = message.content;
-    return (text &&
-      text.includes('Botlander') ||
-      text.includes('botlander') ||
-      text.includes(`<@${clientid}>`)
-    )
+    return (
+      text &&
+      (text.includes(`<@${clientid}>`) ||
+        text.includes("Botlander") ||
+        text.includes("botlander"))
+    );
   },
 };
