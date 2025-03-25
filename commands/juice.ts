@@ -26,10 +26,10 @@ const contributor = "835404784529571880";
 const connoisseur = "1060325532136382585";
 const tasty = "486384160790020098";
 const weights = {
-  [benefactor]: 0.2,
-  [contributor]: 0.1,
-  [connoisseur]: 0.1,
-  [tasty]: 0.1,
+  [benefactor]: 0.1,
+  [contributor]: 0.05,
+  [connoisseur]: 0.05,
+  [tasty]: 0.05,
 };
 
 //base chance 5%
