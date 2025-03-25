@@ -7,6 +7,7 @@ import {
 import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";
+import { juicerate } from "./juice";
 import perms from "../permissions";
 import * as lib from "../lib/message";
 import { modes } from "../lib/chat";
@@ -29,7 +30,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
   if (!perms.owner(interaction)) return;
   const command = interaction.options.getString("command", true).split(" ");
 
-  // publicly visible or ephemeral
+  //publicly visible or ephemeral
   const flags = command[0].startsWith("pub")
     ? undefined
     : MessageFlags.Ephemeral;
@@ -45,8 +46,8 @@ export async function command(interaction: ChatInputCommandInteraction) {
       process.exit();
     }
 
-    // list files
-    // ls|dir|list path
+    //list files
+    //ls|dir|list path
     if (command[0].match("ls|dir|list")) {
       let dir = directory(command[1]);
       const stat = await fs.lstat(dir);
@@ -76,8 +77,8 @@ export async function command(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    // whitelist server or user for chatbot
-    // whitelist add|remove user|guild| id
+    //whitelist server or user for chatbot
+    //whitelist add|remove user|guild| id
     if (command[0].match("whitelist")) {
       let whitelist = JSON.parse(
         await fs.readFile("data/chat/whitelist.json", "utf-8")
@@ -105,8 +106,23 @@ export async function command(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    // chatbot modes
-    // mode set|get|list|new|remove name content
+    //juice rate
+    //juicerate set|reset|max value
+    if (command[0].match("juicerate")) {
+      if (command[1]) {
+        if (command[1].match("reset")) juicerate.reset();
+        else if (command[1].match("max")) juicerate.setmax(Number(command[2]));
+        else if (command[1].match("set")) juicerate.set(Number(command[2]));
+      }
+      await interaction.reply({
+        content: `juice rate set to base: ${juicerate.base}, max: ${juicerate.max}`,
+        flags: flags,
+      });
+      return;
+    }
+
+    //chatbot modes
+    //mode set|get|list|new|remove name content
     if (command[0].match("mode")) {
       const action = command[1];
       if (action.match("set")) {
@@ -164,7 +180,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
       }
     }
 
-    // eval code
+    //eval code
     if (command[0].match("eval")) {
       command.shift();
       let s = command.join(" ");

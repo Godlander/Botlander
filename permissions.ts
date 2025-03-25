@@ -1,22 +1,15 @@
-import {
-  ChatInputCommandInteraction,
-  Message,
-  PermissionsBitField,
-  Channel,
-} from "discord.js";
+import { ChatInputCommandInteraction, Message } from "discord.js";
 import { ownerid, clientid } from "./config.json";
 
 export default {
   //true if bot has permission
-  self(channel: Channel, arr: bigint[]) {
-    if (channel.isDMBased()) return true;
-    return channel.guild.members.me?.permissions.has(arr);
+  self(interaction: ChatInputCommandInteraction, arr: bigint[]) {
+    return interaction.appPermissions.has(arr);
   },
 
   //true if interaction author has permissions
   has(interaction: ChatInputCommandInteraction, arr: bigint[]) {
-    if ((interaction.member?.permissions as PermissionsBitField).has(arr))
-      return true;
+    if (interaction.memberPermissions?.has(arr)) return true;
     interaction.reply({
       content: `You do not have permission to use this command.`,
       ephemeral: true,
