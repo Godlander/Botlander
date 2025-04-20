@@ -52,7 +52,7 @@ export async function chat(
   modelist: string[] = [modes.selected]
 ): Promise<string> {
   let reply;
-  const model = "gpt-4o-mini";
+  const model = "gpt-4.1-nano";
   let body: any = {
     model: model,
     max_tokens: 400,
