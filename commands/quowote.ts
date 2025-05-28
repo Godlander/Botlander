@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { getmessage } from "../lib/message";
 import { quote } from "./quote";
 
@@ -91,7 +91,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
   const raw = interaction.options.getBoolean("raww", false);
   //check that link is a discord message
   if (!input.startsWith("https://discord.com/channels/")) {
-    interaction.reply({ content: `Invalid message link`, ephemeral: true });
+    interaction.reply({ content: `Invalid message link`, flags: MessageFlags.Ephemeral });
     return;
   }
   const ids = input.split("/").splice(4, 3);
@@ -102,7 +102,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
     if (raw) interaction.reply("`" + JSON.stringify(embed) + "`");
     else interaction.reply({ content: mention + " " + input, embeds: [embed] });
   } catch (e) {
-    interaction.reply({ content: `Invalid message link`, ephemeral: true });
+    interaction.reply({ content: `Invalid message link`, flags: MessageFlags.Ephemeral });
     console.log(e);
     return;
   }

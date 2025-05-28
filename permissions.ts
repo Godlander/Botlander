@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Message } from "discord.js";
+import { ChatInputCommandInteraction, Message, MessageFlags } from "discord.js";
 import { ownerid, clientid } from "./config.json";
 
 export default {
@@ -12,7 +12,7 @@ export default {
     if (interaction.memberPermissions?.has(arr)) return true;
     interaction.reply({
       content: `You do not have permission to use this command.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   },
@@ -22,7 +22,7 @@ export default {
     if (interaction.user.id === ownerid) return true;
     interaction.reply({
       content: `You do not have permission to use this command.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   },

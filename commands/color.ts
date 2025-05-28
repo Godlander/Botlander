@@ -3,6 +3,7 @@ import {
   ApplicationIntegrationType,
   ChatInputCommandInteraction,
   InteractionContextType,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -150,7 +151,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
   try {
     out = parse(input);
   } catch {
-    interaction.reply({ content: `Invalid color`, ephemeral: true });
+    interaction.reply({ content: `Invalid color`, flags: MessageFlags.Ephemeral, });
     return;
   }
   interaction.reply({ embeds: [out] });

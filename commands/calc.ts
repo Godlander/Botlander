@@ -2,6 +2,7 @@ import {
   ApplicationIntegrationType,
   ChatInputCommandInteraction,
   InteractionContextType,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { evaluate } from "mathjs";
@@ -35,7 +36,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
   } catch (e: any) {
     interaction.reply({
       content: "`" + e.stack.split("\n", 1)[0] + "`",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       allowedMentions: { repliedUser: false },
     });
   }

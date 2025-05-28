@@ -4,6 +4,7 @@ import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   APIEmbed,
+  MessageFlags,
 } from "discord.js";
 import fs from "fs";
 import perms from "../permissions";
@@ -65,7 +66,7 @@ export const slashcommand = new SlashCommandBuilder()
 
 function save(id: string) {
   fs.writeFileSync(
-    __dirname + "../data/faq/" + id + ".json",
+    __dirname + "/../data/faq/" + id + ".json",
     JSON.stringify(FAQ.local[id])
   );
 }
@@ -145,7 +146,7 @@ async function send(
     if ("rawError" in e) e = e.rawerror;
     interaction.reply({
       content: JSON.stringify(e).substring(0, 1999),
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -198,7 +199,7 @@ export async function command(interaction: ChatInputCommandInteraction) {
     if (!perms.has(interaction, [PermissionFlagsBits.ManageMessages])) return;
     if (FAQ.remove(id, tag))
       interaction.reply({ content: `Removed faq \`${tag}\`` });
-    else interaction.reply({ content: `No faq \`${tag}\``, ephemeral: true });
+    else interaction.reply({ content: `No faq \`${tag}\``, flags: MessageFlags.Ephemeral });
     save(id);
   }
 }
