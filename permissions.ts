@@ -1,10 +1,16 @@
-import { ChatInputCommandInteraction, Message, MessageFlags } from "discord.js";
+import {
+  Channel,
+  ChatInputCommandInteraction,
+  Message,
+  MessageFlags,
+} from "discord.js";
 import { ownerid, clientid } from "./config.json";
 
 export default {
-  //true if bot has permission
-  self(interaction: ChatInputCommandInteraction, arr: bigint[]) {
-    return interaction.appPermissions.has(arr);
+  //true if bot has permission in channel
+  self(channel: Channel, arr: bigint[]) {
+    if (channel.isDMBased()) return true;
+    return channel.guild.members.me?.permissions.has(arr);
   },
 
   //true if interaction author has permissions
