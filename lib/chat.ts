@@ -52,14 +52,14 @@ export async function chat(
   modelist: string[] = [modes.selected]
 ): Promise<string> {
   let reply;
-  const model = "gpt-4.1-nano";
+  const model = "gpt-5-nano";
   let body: any = {
     model: model,
-    max_tokens: 400,
     messages: [],
   };
 
   //select mode
+  let instructions = ""
   for (const mode of modelist)
     body.messages.push({ role: "developer", content: modes.get(mode) });
 
