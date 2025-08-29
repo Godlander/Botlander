@@ -59,7 +59,6 @@ export async function chat(
   };
 
   //select mode
-  let instructions = ""
   for (const mode of modelist)
     body.messages.push({ role: "developer", content: modes.get(mode) });
 
