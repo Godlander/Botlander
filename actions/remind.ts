@@ -90,7 +90,7 @@ export async function ondelete(message: Message) {
 export async function oncreate(message: Message) {
   //check for remind in message
   const input = message.content;
-  if (!input.includes("remind")) return false;
+  if (!input.toLowerCase().includes("remind")) return false;
   //check for time in message
   const now = new Date();
   const gettime = chrono.parse(input, now, { forwardDate: true });
