@@ -4,6 +4,10 @@ export function isstring(s: unknown): Boolean {
   return typeof s === "string";
 }
 
+export function propercase(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 //fetches a message from string channel and message ids
 export async function getmessage(
   interaction: Interaction,
