@@ -1,7 +1,6 @@
 import {
   ApplicationIntegrationType,
   ChatInputCommandInteraction,
-  Client,
   InteractionContextType,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -19,18 +18,6 @@ export const slashcommand = new SlashCommandBuilder()
   ])
   .setName("juice")
   .setDescription("🧃");
-
-const serverid = "226104173987364866";
-const benefactor = "988953717179052043";
-const contributor = "835404784529571880";
-const connoisseur = "1060325532136382585";
-const tasty = "486384160790020098";
-const weights = {
-  [benefactor]: 0.1,
-  [contributor]: 0.05,
-  [connoisseur]: 0.05,
-  [tasty]: 0.05,
-};
 
 //base chance 5%
 export const juicerate = {
@@ -58,19 +45,6 @@ export async function command(interaction: ChatInputCommandInteraction) {
     const reply = await interaction.fetchReply();
     const rand = Math.random();
     let chance = juicerate.base;
-
-    //apply roles in godland server
-    const server = interaction.client.guilds.cache.get(serverid);
-    const member = server?.members.cache.get(interaction.user.id);
-    if (member) {
-      for (const role in weights) {
-        if (member.roles.cache.has(role)) {
-          chance += weights[role as keyof typeof weights];
-        }
-      }
-      //max 50% chance (or base if higher)
-      chance = Math.min(chance, juicerate.max);
-    }
 
     if (rand < chance) reply.react("🍹");
     else reply.react("🧃");

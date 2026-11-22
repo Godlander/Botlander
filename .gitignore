@@ -5,3 +5,4 @@ data/*
 .stignore
 bun.lockb
 *test.ts
+*.bat

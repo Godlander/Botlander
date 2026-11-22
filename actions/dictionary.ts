@@ -5,7 +5,7 @@ export async function oncreate(message: Message) {
   //check for dictionary query in message
   const input = message.content;
   const word = input
-    .match(/(?:dictionary(?: for)?) (\w+)|(?:(?:define|definition of|meaning of) )(\w+)|(?:what(?:\w| )* does(?:\w| )* )(\w+) mean/i)
+    .match(/(?:dictionary(?: for)?|define|definition of|meaning of) (\w+)|what[\w ]* does[\w ]* (\w+) mean/i)
     ?.slice(1)
     ?.find((x) => x !== undefined);
   if (!word) return false;

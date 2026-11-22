@@ -1,7 +1,6 @@
 import { Message } from "discord.js";
 import { clientid } from "../config.json";
 import { chat, modes } from "../lib/chat";
-import whitelist from "../data/chat/whitelist.json";
 import defaults from "../data/chat/defaults.json";
 
 async function gethistory(message: Message, replies: any = [], limit = 4000) {
@@ -55,14 +54,6 @@ async function gethistory(message: Message, replies: any = [], limit = 4000) {
 }
 
 export default async function (message: Message) {
-  if (
-    !(
-      (message.guildId ?? "" in whitelist.guilds) ||
-      message.author.id in whitelist.users
-    )
-  )
-    return;
-
   //get modes
   let modelist = [];
   if (message.content.includes(`<@${clientid}>`)) {
@@ -74,7 +65,6 @@ export default async function (message: Message) {
         modelist.push(key);
       }
     }
-    if (modelist.length < 1) modelist.push("default");
   }
   if (modelist.length < 1) modelist.push(modes.selected);
 

@@ -16,7 +16,7 @@ async function sendtyping(channel: Channel) {
     try {
       channel.sendTyping();
     } catch {
-      console.log("hihixd");
+      console.log("could not send typing indicator");
     }
 }
 
@@ -24,9 +24,8 @@ export async function run(message: Message) {
   //ignore bot messages and non botlander calls
   //quit if no permission
   if (
-    !message ||
+    !message.content ||
     perms.bot(message) ||
-    !perms.botlander(message) ||
     !perms.self(message.channel as Channel, [PermissionFlagsBits.SendMessages])
   ) {
     return;

@@ -109,9 +109,7 @@ export async function oncreate(message: Message) {
   //set reminder
   const reply = await message.reply({
     content:
-      "Ok, " +
-      message.member?.displayName +
-      ", I'll remind you <t:" +
+      "Ok, I'll remind you <t:" +
       Math.floor(time.getTime() / 1000) +
       ":R>",
     allowedMentions: { repliedUser: false },
